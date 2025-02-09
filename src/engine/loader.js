@@ -7,8 +7,23 @@ export default class Loader {
     [ResourceCategories.AUDIO]: loadAudio,
   };
 
-  constructor(resources) {
-    this._resources = resources;
+  /**
+   * @type {Map<"images" | "audios" | "spritesheets", Map<string, Resource>>}
+   */
+  _resources = new Map();
+
+  _loaders = {
+    image: this._loadImage.bind(this),
+    audio: this._loadAudio.bind(this),
+    spritesheet: this._loadSpritesheet.bind(this),
+  };
+
+  get resources() {
+    return this._resources;
+  }
+
+  getLoaders() {
+    return this._loaders;
   }
 
   async _loadResource(type, url) {
@@ -31,7 +46,7 @@ export default class Loader {
     resourceCategory.set(key, resource);
   }
 
-  async image(key, url) {
+  async _loadImage(key, url) {
     const CATEGORY = ResourceCategories.AUDIO;
     const [error, resourImage] = this._loadResource(CATEGORY, url);
 
@@ -46,7 +61,7 @@ export default class Loader {
     this._saveResource(CATEGORY, key, resourImage);
   }
 
-  async audio(key, url) {
+  async _loadAudio(key, url) {
     const CATEGORY = ResourceCategories.AUDIO;
     const [error, resourAudio] = this._loadResource(CATEGORY, url);
 
@@ -60,7 +75,7 @@ export default class Loader {
     this._saveResource(CATEGORY, key, resourAudio);
   }
 
-  async spritesheet(key, url, config) {
+  async _loadSpritesheet(key, url, config) {
     const CATEGORY = ResourceCategories.SPRITESHEET;
     const [error, resourSprite] = this._loadResource(
       ResourceCategories.IMAGE,

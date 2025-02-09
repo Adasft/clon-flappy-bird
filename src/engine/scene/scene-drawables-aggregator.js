@@ -7,37 +7,53 @@ import DrawableText from "../drawables/drawable-text.js";
  * Class responsible for aggregating drawable resources.
  */
 export default class SceneDrawablesAggregator {
-  constructor(drawables, game) {
-    this.game = game;
-    this._drawables = drawables;
+  /**
+   * @type {Array<Drawable>}
+   */
+  _drawables = [];
+
+  _adders = {
+    image: this._addDrawableImage.bind(this),
+    sprite: this._addDrawableSprite.bind(this),
+    text: this._addDrawableText.bind(this),
+  };
+
+  constructor(resources) {
+    this._resources = resources;
   }
 
-  /**
-   * Retrieves a resource from the game.
-   * @param {string} category - The category of the resource.
-   * @param {string} key - The key of the resource.
-   * @returns {[Error|null, Resource]} - An array containing an error or the resource.
-   */
-  getResource(category, key) {
+  get drawables() {
+    return this._drawables;
+  }
+
+  getAdders() {
+    return this._adders;
+  }
+
+  _getLoadedResource(category, key) {
     try {
-      const resource = this.game.getResource(category, key);
+      if (!this._resources.has(category)) {
+        throw new Error(`Resource category not found: ${category}`);
+      }
+
+      const resourceCategory = this._resources.get(category);
+      const resource = resourceCategory.get(key);
+
+      if (!resource) {
+        throw new Error(`Resource not found: ${key}`);
+      }
+
       return [null, resource];
     } catch (error) {
       return [error, null];
     }
   }
 
-  /**
-   * Adds an image to the drawables list.
-   * @param {string} key - The key of the image resource.
-   * @param {number} [x=0] - The x-coordinate of the image.
-   * @param {number} [y=0] - The y-coordinate of the image.
-   * @param {number} [width=0] - The width of the image.
-   * @param {number} [height=0] - The height of the image.
-   * @returns {DrawableImage} - The image resource.
-   */
-  image(key, x = 0, y = 0, width = 0, height = 0) {
-    const [error, resource] = this.getResource(ResourceCategories.IMAGE, key);
+  _addDrawableImage(key, x = 0, y = 0, width = 0, height = 0) {
+    const [error, resource] = this._getLoadedResource(
+      ResourceCategories.IMAGE,
+      key
+    );
 
     if (error) {
       console.error(
@@ -57,15 +73,8 @@ export default class SceneDrawablesAggregator {
     return drawableImage;
   }
 
-  /**
-   * Adds a sprite to the drawables list.
-   * @param {string} key - The key of the sprite resource.
-   * @param {number} [x=0] - The x-coordinate of the sprite.
-   * @param {number} [y=0] - The y-coordinate of the sprite.
-   * @returns {DrawableSpriteSheet} - The sprite resource.
-   */
-  sprite(key, x = 0, y = 0) {
-    const [error, resource] = this.getResource(
+  _addDrawableSprite(key, x = 0, y = 0) {
+    const [error, resource] = this._getLoadedResource(
       ResourceCategories.SPRITESHEET,
       key
     );
@@ -88,7 +97,7 @@ export default class SceneDrawablesAggregator {
     return drawableSprite;
   }
 
-  text(text, x, y) {
+  _addDrawableText(text, x, y) {
     const resource = new DrawableText(text);
 
     resource.x = x;

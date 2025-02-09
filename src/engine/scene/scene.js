@@ -1,29 +1,32 @@
+import { SceneBehavior } from "../enums.js";
+import { noop } from "../utils.js";
 import SceneDrawablesAggregator from "./scene-drawables-aggregator.js";
 
 /**
  * Class representing a scene in the game.
  */
 export default class Scene {
-  /**
-   * @type {Array<Drawable>}
-   */
-  _drawables = [];
+  behavior = SceneBehavior.DESTROY;
+  _isPaused = false;
 
-  /**
-   * Creates a new Scene.
-   * @param {string} name - The name of the scene.
-   * @param {Object} options - The options for the scene.
-   * @param {Function} [options.onCreate] - The onCreate callback.
-   * @param {Function} [options.onUpdate] - The onUpdate callback.
-   */
-  constructor(name, options) {
-    this.name = name;
-
-    if (options) {
-      const { onCreate, onUpdate } = options;
-      this.onCreate = onCreate;
-      this.onUpdate = onUpdate;
+  static make(Ctor, { name, gameContext, loader, behavior, states }) {
+    if (states?.onCreate) {
+      Ctor.prototype.onCreate = states.onCreate;
     }
+
+    if (states?.onUpdate) {
+      Ctor.prototype.onUpdate = states.onUpdate;
+    }
+
+    const scene = new Ctor();
+
+    scene.name = name;
+    scene.game = gameContext;
+    scene.behavior = behavior;
+
+    scene._aggregator = new SceneDrawablesAggregator(loader.resources);
+
+    return scene;
   }
 
   /**
@@ -31,21 +34,21 @@ export default class Scene {
    * @returns {SceneDrawablesAggregator} - The aggregator instance.
    */
   get add() {
-    return this._aggregator;
+    return this._aggregator.getAdders();
   }
 
-  /**
-   * Sets the game context.
-   * @param {GameEngine} game - The game instance.
-   */
-  setGameContext(game) {
-    this.game = game;
+  get isPaused() {
+    return this._isPaused;
+  }
 
-    if (!this._aggregator) {
-      this._aggregator = new SceneDrawablesAggregator(
-        this._drawables,
-        this.game
-      );
-    }
+  start() {
+    this._isPaused = false;
+  }
+
+  pause() {
+    this._isPaused = true;
   }
 }
+
+Scene.prototype.onCreate = noop;
+Scene.prototype.onUpdate = noop;
