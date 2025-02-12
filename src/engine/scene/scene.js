@@ -34,7 +34,7 @@ export default class Scene {
    * @returns {SceneDrawablesAggregator} - The aggregator instance.
    */
   get add() {
-    return this._aggregator.getAdders();
+    return this._aggregator.getOrchestrators();
   }
 
   get isPaused() {
@@ -47,6 +47,12 @@ export default class Scene {
 
   pause() {
     this._isPaused = true;
+  }
+
+  drawDrawables(ctx) {
+    for (const drawable of this._aggregator.drawables) {
+      drawable.draw(ctx);
+    }
   }
 }
 

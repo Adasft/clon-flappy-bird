@@ -1,4 +1,4 @@
-import Drawable from "drawable.js";
+import Drawable from "./drawable.js";
 
 export default class DrawableImage extends Drawable {
   constructor(image) {

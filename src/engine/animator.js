@@ -1,8 +1,8 @@
 export class Animator {
   rAF = null;
 
-  constructor({ scene, frameRate = 60 }) {
-    this.scene = scene;
+  constructor(canvasContext, frameRate = 60) {
+    this.canvasContext = canvasContext;
     this.frameRate = frameRate;
     this.frameDuration = 1000 / frameRate;
     this.lastFrame = 0;
@@ -12,7 +12,7 @@ export class Animator {
   animateFrame = () => {
     if (!this.isRunning) {
       cancelAnimationFrame(this.rAF);
-      
+
       return;
     }
 
@@ -21,7 +21,7 @@ export class Animator {
 
     if (delta > this.frameDuration) {
       this.lastFrame = currentFrame;
-      this.scene.display();
+      this.canvasContext.render();
     }
 
     this.rAF = requestAnimationFrame(this.animateFrame);

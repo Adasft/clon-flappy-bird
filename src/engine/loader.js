@@ -1,6 +1,15 @@
 import { loadImage, loadAudio } from "./utils.js";
 import { ResourceCategories } from "./enums.js";
 
+/**
+ * @interface Orchestrator
+ * @description Interface for orchestrators.
+ * @function
+ * @name Orchestrator#getOrchestrators
+ * @returns {Object<string, Function>} - The orchestrators.
+ * @implements {Orchestrator}
+ *
+ */
 export default class Loader {
   _resourceLoaderStrategies = {
     [ResourceCategories.IMAGE]: loadImage,
@@ -12,7 +21,7 @@ export default class Loader {
    */
   _resources = new Map();
 
-  _loaders = {
+  _orchestrators = {
     image: this._loadImage.bind(this),
     audio: this._loadAudio.bind(this),
     spritesheet: this._loadSpritesheet.bind(this),
@@ -22,8 +31,8 @@ export default class Loader {
     return this._resources;
   }
 
-  getLoaders() {
-    return this._loaders;
+  getOrchestrators() {
+    return this._orchestrators;
   }
 
   async _loadResource(type, url) {
@@ -47,8 +56,8 @@ export default class Loader {
   }
 
   async _loadImage(key, url) {
-    const CATEGORY = ResourceCategories.AUDIO;
-    const [error, resourImage] = this._loadResource(CATEGORY, url);
+    const CATEGORY = ResourceCategories.IMAGE;
+    const [error, resourImage] = await this._loadResource(CATEGORY, url);
 
     if (error) {
       console.error(
@@ -63,7 +72,7 @@ export default class Loader {
 
   async _loadAudio(key, url) {
     const CATEGORY = ResourceCategories.AUDIO;
-    const [error, resourAudio] = this._loadResource(CATEGORY, url);
+    const [error, resourAudio] = await this._loadResource(CATEGORY, url);
 
     if (error) {
       console.error(
@@ -77,7 +86,7 @@ export default class Loader {
 
   async _loadSpritesheet(key, url, config) {
     const CATEGORY = ResourceCategories.SPRITESHEET;
-    const [error, resourSprite] = this._loadResource(
+    const [error, resourSprite] = await this._loadResource(
       ResourceCategories.IMAGE,
       url
     );

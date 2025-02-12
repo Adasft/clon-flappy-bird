@@ -1,47 +1,35 @@
-import { CanvasFrame } from "./engine/canvas-frame.js";
+import {
+  CanvasBackgroundImageFit,
+  CanvasBackgroundImagePosition,
+} from "./engine/enums.js";
+import { createGame } from "./engine/game-engine.js";
 
-let bird;
-
-class Bird extends CanvasFrame.DrawableSprite {
-  constructor() {
-    super("bird.png", { frameWidth: 32, frameHeight: 32 });
-  }
-}
-
-const frame = new CanvasFrame({
-  parentRenderer: document.body,
-  aspectRadio: { width: 288, height: 512 },
-  scale: window.innerHeight / 512,
-  background: "../assets/images/background-day.png",
+const { game, render } = createGame({
+  parentRenderer: document.getElementById("render"),
+  aspectRatio: 9 / 16,
+  scale: 0.7,
   frameRate: 60,
-  paths: {
-    images: "../assets/images",
-    sounds: "../assets/sounds",
-    fonts: "../assets/fonts",
-    sprites: "../assets/sprites",
-  },
-  physics: {
-    gravity: 0.5,
-    jumpImpulse: 0.5,
-    jumpDuration: 0.5,
-    maxSpeed: 5,
-    minSpeed: 0.5,
-  },
-  scene: {
-    preload() {
-      this.load.image("base", "base.png");
-      this.load.sound("jump", "jump.mp3");
-      this.load.sprite("bird", "bird.png", { frameWidth: 32, frameHeight: 32 });
+  background: {
+    image: {
+      url: "../assets/images/background-day.png",
+      positions: {
+        x: CanvasBackgroundImagePosition.CENTER,
+        y: CanvasBackgroundImagePosition.CENTER,
+      },
+      fit: CanvasBackgroundImageFit.FILL,
     },
-    create() {
-      this.base = this.add.image("base", 0, 0, 288, 512);
-
-      this.sounds.play("jump");
-    },
-    update() {},
+  },
+  preload() {
+    this.load.image("base", "../assets/images/base.png");
   },
 });
 
-frame.addScenes(new MainScene());
+game.scene.add("main", {
+  onCreate() {
+    this.add.image("base", 0, 0, 100, 200);
+  },
+});
 
-frame.start();
+render(() => {
+  game.scene.start("main");
+});

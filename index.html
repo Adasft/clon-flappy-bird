@@ -25,7 +25,154 @@
 
         font-size: 50px;
       }
+
+      #render {
+        width: 600px;
+        height: 700px;
+        border: 1px solid #666;
+      }
     </style>
   </head>
-  <body></body>
+  <body>
+    <div id="render"></div>
+    <!-- <script>
+      class CanvasContext {
+        constructor({ parentRenderer, context, aspectRatio, scale }) {
+          this._canvas = document.createElement("canvas");
+          this._context = this._canvas.getContext(context);
+          this._parentRenderer = parentRenderer;
+          this._aspectRatio = aspectRatio;
+          this._scale = scale;
+        }
+
+        get canvas() {
+          return this._canvas;
+        }
+
+        get ctx() {
+          return this._context;
+        }
+
+        get width() {
+          return this._canvas.width;
+        }
+
+        get height() {
+          return this._canvas.height;
+        }
+
+        calcBackgroundDimensionForContainFit(imageAspectRatio) {
+          const { width, height } = this._background.image.node;
+          const imageAspectRatio = width / height;
+
+          if (imageAspectRatio > this._aspectRatio) {
+            return {
+              width: this.width,
+              height: this.width / imageAspectRatio,
+            };
+          }
+
+          return {
+            width: this.height * imageAspectRatio,
+            height: this.height,
+          };
+        }
+
+        calcBackgroundDimensionForCoverFit(imageAspectRatio) {
+          if (imageAspectRatio > this._aspectRatio) {
+            return {
+              width: this.height * imageAspectRatio,
+              height: this.height,
+            };
+          }
+
+          return {
+            width: this.width,
+            height: this.width / imageAspectRatio,
+          };
+        }
+
+        getBackgroundDimensions(fit, bgImage) {
+          const { width, height } = bgImage;
+
+          if (fit === "full") {
+            return { width, height };
+          }
+
+          const imageAspectRatio = width / height;
+
+          if (fit === "contain") {
+            return this.calcBackgroundDimensionForContainFit(imageAspectRatio);
+          }
+
+          if (fit === "cover") {
+            return this.calcBackgroundDimensionForCoverFit(imageAspectRatio);
+          }
+        }
+
+        render() {
+          const { width, height } =
+            this._parentRenderer.getBoundingClientRect();
+          const aspectRatio = width / height;
+
+          if (aspectRatio > this._aspectRatio) {
+            this._canvas.width = height * this._aspectRatio * this._scale;
+            this._canvas.height = height * this._scale;
+          } else {
+            this._canvas.width = width * this._scale;
+            this._canvas.height = (width / this._aspectRatio) * this._scale;
+          }
+
+          this._context.imageSmoothingEnabled = false;
+          this._context.scale(this._scale, this._scale);
+
+          // this._canvas.width = 288;
+          // this._canvas.height = 512;
+          // this._canvas.style.imageRendering = "pixelated";
+
+          const img = new Image();
+
+          img.src = "./assets/images/base.png";
+          img.onload = () => {
+            const dimensions = this.getBackgroundDimensions("contain", img);
+            console.log(dimensions);
+            this._context.drawImage(
+              img,
+              0,
+              0,
+              dimensions.width,
+              dimensions.height
+            );
+          };
+
+          // const img = new Image();
+
+          // img.src = "./assets/images/base.png";
+          // img.onload = () => {
+          //   this._context.drawImage(
+          //     img,
+          //     0,
+          //     this.canvas.height - img.height,
+          //     this.canvas.width,
+          //     img.height
+          //   );
+          // };
+        }
+
+        mount() {
+          this.render();
+          this._parentRenderer.append(this._canvas);
+        }
+      }
+
+      const c = new CanvasContext({
+        parentRenderer: document.getElementById("render"),
+        context: "2d",
+        aspectRatio: 9 / 16,
+        scale: 1,
+      });
+
+      c.mount();
+    </script> -->
+  </body>
 </html>

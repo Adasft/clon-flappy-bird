@@ -4,7 +4,13 @@ import DrawableSpriteSheet from "../drawables/drawable-spritesheet.js";
 import DrawableText from "../drawables/drawable-text.js";
 
 /**
- * Class responsible for aggregating drawable resources.
+ * @interface Orchestrator
+ * @description Interface for orchestrators.
+ * @function
+ * @name Orchestrator#getOrchestrators
+ * @returns {Object<string, Function>} - The orchestrators.
+ * @implements {Orchestrator}
+ *
  */
 export default class SceneDrawablesAggregator {
   /**
@@ -12,7 +18,7 @@ export default class SceneDrawablesAggregator {
    */
   _drawables = [];
 
-  _adders = {
+  _orchestrators = {
     image: this._addDrawableImage.bind(this),
     sprite: this._addDrawableSprite.bind(this),
     text: this._addDrawableText.bind(this),
@@ -26,8 +32,8 @@ export default class SceneDrawablesAggregator {
     return this._drawables;
   }
 
-  getAdders() {
-    return this._adders;
+  getOrchestrators() {
+    return this._orchestrators;
   }
 
   _getLoadedResource(category, key) {
@@ -57,7 +63,7 @@ export default class SceneDrawablesAggregator {
 
     if (error) {
       console.error(
-        `GameEngine [Aggregator Error]: Image with key ${key} was not found.`,
+        `GameEngine [Aggregator Error]: Image with key '${key}' was not found.`,
         error
       );
       return;

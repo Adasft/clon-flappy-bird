@@ -1,4 +1,4 @@
-class Drawable {
+export default class Drawable {
   x = 0;
   y = 0;
   width = 0;
