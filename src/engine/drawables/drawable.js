@@ -11,6 +11,12 @@ export default class Drawable {
 
   rotate = 0;
 
+  setScale(size) {
+    this.width *= size;
+    this.height *= size;
+    return this;
+  }
+
   draw(ctx) {
     ctx.save();
     ctx.scale(this.scale.x, this.scale.y);

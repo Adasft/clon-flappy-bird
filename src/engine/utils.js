@@ -16,4 +16,26 @@ export function loadAudio(src) {
   });
 }
 
+export function createFormatterErrors(Ctor) {
+  return function formatError(...errors) {
+    return `GameEngine [${Ctor.name} Error]: ${errors.join("\n")}`;
+  };
+}
+
+export function when(currentCase, caseHandlers) {
+  if (!caseHandlers.hasOwnProperty(currentCase)) {
+    return caseHandlers.default?.();
+  }
+
+  const caseHandler = caseHandlers[currentCase];
+
+  if (typeof caseHandler !== "function") {
+    throw new Error(
+      `Invalid case: "${currentCase}". Expected a function but got ${typeof caseHandler}.`
+    );
+  }
+
+  return caseHandler();
+}
+
 export function noop() {}

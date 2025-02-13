@@ -79,7 +79,7 @@ export default class SceneDrawablesAggregator {
     return drawableImage;
   }
 
-  _addDrawableSprite(key, x = 0, y = 0) {
+  _addDrawableSprite(key, x = 0, y = 0, width, height) {
     const [error, resource] = this._getLoadedResource(
       ResourceCategories.SPRITESHEET,
       key
@@ -98,18 +98,21 @@ export default class SceneDrawablesAggregator {
     });
     drawableSprite.x = x;
     drawableSprite.y = y;
+    drawableSprite.width = width;
+    drawableSprite.height = height;
 
     this._drawables.push(drawableSprite);
     return drawableSprite;
   }
 
   _addDrawableText(text, x, y) {
-    const resource = new DrawableText(text);
+    const drawableText = new DrawableText(text);
 
-    resource.x = x;
-    resource.y = y;
+    drawableText.x = x;
+    drawableText.y = y;
 
-    this._drawables.push(resource);
-    return resource;
+    this._drawables.push(drawableText);
+
+    return drawableText;
   }
 }

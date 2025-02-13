@@ -1,4 +1,4 @@
-export class Animator {
+export default class Animator {
   rAF = null;
 
   constructor(canvasContext, frameRate = 60) {

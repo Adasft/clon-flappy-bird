@@ -52,6 +52,7 @@ export default class Scene {
   drawDrawables(ctx) {
     for (const drawable of this._aggregator.drawables) {
       drawable.draw(ctx);
+      // console.log(drawable);
     }
   }
 }

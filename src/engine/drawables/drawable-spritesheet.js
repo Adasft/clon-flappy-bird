@@ -28,7 +28,7 @@ export default class DrawableSpriteSheet extends Drawable {
   draw(ctx) {
     super.draw(ctx);
     ctx.drawImage(
-      this._spriteSheet,
+      this._spritesheet,
       this.frameX,
       this.frameY,
       this.frameWidth,
