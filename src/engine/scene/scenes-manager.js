@@ -1,5 +1,5 @@
 import { SceneBehavior } from "../enums.js";
-import { when } from "../utils.js";
+import { createFormatterErrors, when } from "../utils.js";
 import Scene from "./scene.js";
 
 export default class ScenesManager {
@@ -15,12 +15,28 @@ export default class ScenesManager {
     get: (name) => this._scenes.get(name),
   };
 
-  constructor(game) {
-    this.game = game;
+  constructor(engine) {
+    this._engine = engine;
+    this._formatError = createFormatterErrors(ScenesManager);
   }
 
   getOrchestrators() {
     return this._orchestrators;
+  }
+
+  display(ctx) {
+    for (const scene of this._renderedScenes) {
+      if (!scene.isPaused) {
+        scene.onUpdate();
+      }
+      scene.drawDrawables(ctx);
+    }
+  }
+
+  create() {
+    for (const scene of this._scenes.values()) {
+      scene.onCreate();
+    }
   }
 
   /**
@@ -33,15 +49,14 @@ export default class ScenesManager {
    */
   _registerScene(name, scene, behavior) {
     if (this._scenes.has(name)) {
-      throw new Error(`Scene already exists: ${name}`);
+      throw this._formatError(`Scene already exists: ${name}`);
     }
 
     const isCtor = typeof scene === "function";
     const sceneStates = isCtor ? null : scene;
     const sceneInstance = Scene.make(isCtor ? scene : Scene, {
       name,
-      gameContext: this.game.context,
-      loader: this.game.loader,
+      engine: this._engine,
       behavior,
       states: sceneStates,
     });
@@ -55,11 +70,11 @@ export default class ScenesManager {
     const scene = this._scenes.get(name);
 
     if (!scene) {
-      throw new Error(`Scene not found: ${name}`);
+      throw this._formatError(`Scene not found: ${name}`);
     }
 
-    if (!this.game.isRunning) {
-      this.game.play();
+    if (!this._engine.running) {
+      this._engine.run();
     }
 
     /**
@@ -81,20 +96,5 @@ export default class ScenesManager {
     this.currentScene = scene;
     this._renderedScenes.add(scene);
     scene.start();
-  }
-
-  display(ctx) {
-    for (const scene of this._renderedScenes) {
-      if (!scene.isPaused) {
-        scene.onUpdate();
-      }
-      scene.drawDrawables(ctx);
-    }
-  }
-
-  create() {
-    for (const scene of this._scenes.values()) {
-      scene.onCreate();
-    }
   }
 }

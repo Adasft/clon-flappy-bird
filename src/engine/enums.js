@@ -2,6 +2,7 @@ export const ResourceCategories = {
   IMAGE: "images",
   AUDIO: "audios",
   SPRITESHEET: "spritesheets",
+  TILE_SPRITE: "tile-sprite",
 };
 
 export const SceneBehavior = {
@@ -23,4 +24,9 @@ export const CanvasBackgroundImagePosition = {
   RIGHT: "right",
   TOP: "top",
   BOTTOM: "bottom",
+};
+
+export const AngleMode = {
+  RADIANS: "radians",
+  DEGRESS: "degress",
 };

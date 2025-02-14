@@ -22,38 +22,52 @@ export default class Loader {
   _resources = new Map();
 
   _pendingResourcesQueue = [];
+  _rejectedResourceKeys = [];
+  _amountLoaded = 0;
+  _amountPendings = 0;
+  _pendingResourceSize = 0;
+  _loadedCount = 0;
+  _prevSize = 0;
 
   _orchestrators = {
     image: (key, url) => {
-      this._pendingResourcesQueue.push({
-        category: ResourceCategories.IMAGE,
-        key,
-        url,
-      });
+      this._savePendingResource(ResourceCategories.IMAGE, key, url);
     },
     audio: (key, url) => {
-      this._pendingResourcesQueue.push({
-        category: ResourceCategories.AUDIO,
+      this._savePendingResource(ResourceCategories.AUDIO, key, url);
+    },
+    spritesheet: (key, url, config) =>
+      this._savePendingResource(
+        ResourceCategories.SPRITESHEET,
         key,
         url,
-      });
-    },
-    spritesheet: (key, url, config) => {
-      this._pendingResourcesQueue.push({
-        category: ResourceCategories.SPRITESHEET,
-        key,
-        url,
-        config,
-      });
-    },
+        config
+      ),
   };
 
-  constructor() {
+  constructor(onProgress) {
+    this._onProgress = onProgress;
     this._formatError = createFormatterErrors(Loader);
   }
 
   get resources() {
     return this._resources;
+  }
+
+  get hasPendingResources() {
+    return this.pendings > 0;
+  }
+
+  get pendings() {
+    return this._pendingResourcesQueue.length;
+  }
+
+  get size() {
+    let size = 0;
+    for (const categoryMap of this._resources.values()) {
+      size += categoryMap.size;
+    }
+    return size;
   }
 
   getOrchestrators() {
@@ -62,6 +76,11 @@ export default class Loader {
 
   loadResources() {
     const promises = [];
+
+    this._amountPendings +=
+      this.pendings > this._amountPendings ? this.pendings : 0;
+    this._pendingResourceSize = this.pendings;
+    this._prevSize = this.size;
 
     for (const { category, key, url, config } of this._pendingResourcesQueue) {
       promises.push(
@@ -74,9 +93,28 @@ export default class Loader {
       );
     }
 
-    this._pendingResourcesQueue = [];
+    this._pendingResourcesQueue = this._pendingResourcesQueue.filter(
+      ({ key }) => this._rejectedResourceKeys.includes(key)
+    );
+    this._rejectedResourceKeys = [];
+    this._loadedCount = 0;
 
     return Promise.allSettled(promises);
+  }
+
+  _savePendingResource(category, key, url, config) {
+    if (this._resources.get(category)?.has(key)) {
+      return;
+    }
+
+    this._pendingResourcesQueue.push({
+      category,
+      key,
+      url,
+      config,
+    });
+
+    this._pendingResourceSize++;
   }
 
   async _loadResource(type, url) {
@@ -111,17 +149,29 @@ export default class Loader {
     const [loadingError, resource] = await this._loadResource(type, url);
 
     if (loadingError) {
+      this._rejectedResourceKeys.push(key);
       reject(this._formatError(error, loadingError));
-      return;
+    } else {
+      this._saveResource(
+        category,
+        key,
+        config ? { data: resource, config } : resource
+      );
+
+      this._amountLoaded++;
+      this._amountPendings--;
+
+      resolve();
     }
 
-    this._saveResource(
-      category,
-      key,
-      config ? { data: resource, config } : resource
-    );
+    this._loadedCount++;
 
-    resolve();
+    this._onProgress({
+      progress: this._loadedCount / this._pendingResourceSize,
+      loaded: this._amountLoaded,
+      pendings: this._amountPendings,
+      total: this._prevSize + this._pendingResourceSize,
+    });
 
     return promise;
   }

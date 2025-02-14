@@ -1,15 +1,15 @@
-import { SceneBehavior } from "../enums.js";
 import { noop } from "../utils.js";
 import SceneDrawablesAggregator from "./scene-drawables-aggregator.js";
 
-/**
- * Class representing a scene in the game.
- */
 export default class Scene {
-  behavior = SceneBehavior.DESTROY;
+  name;
+  game;
+  behavior;
+  _engine;
+  _aggregator;
   _isPaused = false;
 
-  static make(Ctor, { name, gameContext, loader, behavior, states }) {
+  static make(Ctor, { name, engine, getAngleMode, behavior, states }) {
     if (states?.onCreate) {
       Ctor.prototype.onCreate = states.onCreate;
     }
@@ -21,10 +21,12 @@ export default class Scene {
     const scene = new Ctor();
 
     scene.name = name;
-    scene.game = gameContext;
+    scene.game = engine.context;
     scene.behavior = behavior;
+    scene._engine = engine;
+    scene._getAngleMode = getAngleMode;
 
-    scene._aggregator = new SceneDrawablesAggregator(loader.resources);
+    scene._aggregator = new SceneDrawablesAggregator(engine.loader.resources);
 
     return scene;
   }
@@ -41,6 +43,10 @@ export default class Scene {
     return this._isPaused;
   }
 
+  get angleMode() {
+    return this._engine.angleMode;
+  }
+
   start() {
     this._isPaused = false;
   }
@@ -52,7 +58,6 @@ export default class Scene {
   drawDrawables(ctx) {
     for (const drawable of this._aggregator.drawables) {
       drawable.draw(ctx);
-      // console.log(drawable);
     }
   }
 }

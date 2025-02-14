@@ -1,27 +1,45 @@
 import Loader from "./loader.js";
-import { noop } from "./utils.js";
+import { createFormatterErrors, noop } from "./utils.js";
 import Animator from "./animator.js";
 import ScenesManager from "./scene/scenes-manager.js";
 import CanvasContext from "./canvas-context.js";
 import GameContext from "./game-context.js";
 import Scene from "./scene/scene.js";
+import {
+  CanvasBackgroundImageFit,
+  CanvasBackgroundImagePosition,
+  SceneBehavior,
+  AngleMode,
+} from "./enums.js";
 
 export default class GameEngine {
+  running = false;
+
   constructor({
     parentRenderer,
     aspectRatio,
     background: { image = null, color = "#FFF" } = {},
     scale,
     frameRate,
-    preload = noop,
+    angleMode = AngleMode.RADIANS,
+    playOnRender = true,
+    onPreload = noop,
+    onRender = noop,
+    onLoadingProgress = noop,
   }) {
     this._parentRenderer = parentRenderer;
     this._aspectRatio = aspectRatio;
     this._scale = scale;
     this._frameRate = frameRate;
-    this._preload = preload;
+    this._angleMode = angleMode;
+    this._playOnRender = playOnRender;
+    this.onPreload = onPreload;
+    this.onRender = onRender;
+    this.onLoadingProgress = onLoadingProgress;
 
-    this._loader = new Loader();
+    this._formatError = createFormatterErrors(GameEngine);
+
+    this._loader = new Loader(this.onLoadingProgress);
     this._scenesManager = new ScenesManager(this);
 
     this._canvasContext = new CanvasContext({
@@ -34,11 +52,7 @@ export default class GameEngine {
     });
 
     this._animator = new Animator(this._canvasContext, frameRate);
-    this._context = new GameContext(
-      this._loader,
-      this._scenesManager,
-      this._animator
-    );
+    this._context = new GameContext(this);
   }
 
   get canvasContext() {
@@ -57,22 +71,77 @@ export default class GameEngine {
     return this._context;
   }
 
-  render(renderCallback) {
-    this._prepareScenes();
+  set onPreload(callback) {
+    if (typeof callback !== "function") {
+      throw this._formatError("Invalid preload method");
+    }
+    this._onPreload = callback;
+  }
+
+  get onPreload() {
+    return this._onPreload;
+  }
+
+  set onRender(callback) {
+    if (typeof callback !== "function") {
+      throw this._formatError("Invalid render method");
+    }
+    this._onRender = callback;
+  }
+
+  get onRender() {
+    return this._onRender;
+  }
+
+  set onLoadingProgress(callback) {
+    if (typeof callback !== "function") {
+      throw this._formatError("Invalid loading progress method");
+    }
+    this._onLoadingProgress = callback;
+  }
+
+  get onLoadingProgress() {
+    return this._onLoadingProgress;
+  }
+
+  set angleMode(mode) {
+    if (!Object.values(AngleMode).includes(mode)) {
+      throw this._formatError("Invalid angle mode");
+    }
+    this._angleMode = mode;
+  }
+
+  get angleMode() {
+    return this._angleMode;
+  }
+
+  async render() {
     this._canvasContext.mount();
-    renderCallback();
-    this.play();
+
+    await this.preload();
+
+    this._scenesManager.create();
+
+    this.onRender();
+
+    if (this._playOnRender) {
+      this.run();
+    }
   }
 
-  play() {
-    this._context.play();
+  run() {
+    this._animator.start();
+    this.running = true;
   }
 
-  pause() {
-    this._context.pause();
+  stop() {
+    this._animator.stop();
+    this.running = false;
   }
 
-  async _loadResources() {
+  async preload() {
+    this.onPreload();
+
     const values = await this._loader.loadResources();
 
     values.forEach(({ status, reason }) => {
@@ -80,14 +149,6 @@ export default class GameEngine {
         console.error(reason);
       }
     });
-  }
-
-  async _prepareScenes() {
-    this._preload();
-
-    await this._loadResources();
-
-    this._scenesManager.create();
   }
 }
 
@@ -101,7 +162,14 @@ function createGame(config) {
   };
 }
 
-export { Scene, createGame };
+export {
+  Scene,
+  createGame,
+  CanvasBackgroundImagePosition as BackgroundPosition,
+  CanvasBackgroundImageFit as BackgroundFit,
+  SceneBehavior,
+  AngleMode,
+};
 
 // game.scene.add("main", {
 //   onCreate() {

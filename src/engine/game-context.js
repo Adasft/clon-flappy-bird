@@ -1,27 +1,30 @@
 export default class GameContext {
-  running = false;
-
-  constructor(loader, scenesManager, animator) {
-    this._loader = loader;
-    this._scenesManager = scenesManager;
-    this._animator = animator;
+  constructor(engine) {
+    this._engine = engine;
   }
 
   get load() {
-    return this._loader.getOrchestrators();
+    return this._engine.loader.getOrchestrators();
   }
 
   get scene() {
-    return this._scenesManager.getOrchestrators();
+    return this._engine.scenesManager.getOrchestrators();
+  }
+
+  set angleMode(mode) {
+    this._engine.angleMode = mode;
+  }
+
+  get angleMode() {
+    return this._engine.angleMode;
   }
 
   play() {
-    this._animator.start();
-    this.running = true;
+    if (this._engine.running) return;
+    this._engine.run();
   }
 
   pause() {
-    this._animator.stop();
-    this.running = false;
+    this._engine.stop();
   }
 }
