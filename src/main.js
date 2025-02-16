@@ -50,9 +50,11 @@ class MainScene extends Engine.Scene {
 
     console.log(this.bird);
 
-    this.tile = this.add.tileSprite("tierra", 0, 300, 300, 600);
-    this.tile.tilePositionX = 0;
-    this.tile.tilePositionY = 0;
+    this.tileBase = this.add.tileSprite("base", 0, 600, 400, 100);
+
+    // this.tile = this.add.tileSprite("tierra", 0, 300, 300, 600);
+    // this.tile.tilePositionX = 0;
+    // this.tile.tilePositionY = 0;
 
     // console.log(this.bird._x);
 
@@ -61,8 +63,9 @@ class MainScene extends Engine.Scene {
   }
 
   onUpdate() {
-    this.tile.tilePositionX += 9;
-    this.tile.tilePositionY += 1.5;
+    // this.tile.tilePositionX += 0.5;
+    // this.tile.tilePositionY += 1.5;
+    this.tileBase.tilePositionX -= 3;
   }
 }
 
