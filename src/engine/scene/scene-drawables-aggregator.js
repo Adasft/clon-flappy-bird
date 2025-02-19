@@ -40,38 +40,6 @@ export default class SceneDrawablesAggregator {
     return this._orchestrators;
   }
 
-  _getCategory(key, categories) {
-    const categoriesNotFound = [];
-    let resource;
-
-    for (const category of categories) {
-      if (!this._resources.has(category)) {
-        categoriesNotFound.push(category);
-        continue;
-      }
-
-      const resourceCategory = this._resources.get(category);
-
-      resource = resourceCategory.get(key);
-
-      if (resource) break;
-    }
-
-    const resourceNotFound = !resource;
-
-    if (resourceNotFound && categoriesNotFound.length > 0) {
-      throw new Error(
-        `Resource category not found: ${categoriesNotFound.join(", ")}`
-      );
-    }
-
-    if (resourceNotFound) {
-      throw new Error(`Resource not found: ${key}`);
-    }
-
-    return resource;
-  }
-
   _getLoadedResource(key, ...categories) {
     try {
       const categoriesNotFound = [];
@@ -93,13 +61,13 @@ export default class SceneDrawablesAggregator {
       const isResourceNotFound = !resource;
 
       if (isResourceNotFound && categoriesNotFound.length > 0) {
-        throw new Error(
+        throw this._formatError(
           `Resource category not found: ${categoriesNotFound.join(", ")}`
         );
       }
 
       if (isResourceNotFound) {
-        throw new Error(`Resource not found: ${key}`);
+        throw this._formatError(`Resource not found: ${key}`);
       }
 
       return [null, resource];

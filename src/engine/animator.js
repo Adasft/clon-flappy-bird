@@ -1,12 +1,18 @@
 export default class Animator {
   rAF = null;
 
-  constructor(canvasContext, frameRate = 60) {
+  /**
+   * @param {Object} canvasContext - Objeto que contiene el método render().
+   * @param {Object} options - Opciones de configuración.
+   * @param {boolean} [options.limitFps=true] - Indica si se debe limitar los FPS.
+   * @param {number} [options.frameRate=60] - FPS objetivo si se limita la animación.
+   */
+  constructor(canvasContext, { limitFps = false, frameRate = 60 } = {}) {
     this.canvasContext = canvasContext;
+    this.limitFps = limitFps;
     this.frameRate = frameRate;
     this.frameDuration = 1000 / frameRate;
-    this.lastFrame = performance.now();
-    this.accumulator = 0;
+    this.lastFrame = 0;
     this.isRunning = false;
   }
 
@@ -18,12 +24,15 @@ export default class Animator {
 
     const currentFrame = performance.now();
     const delta = currentFrame - this.lastFrame;
-    this.lastFrame = currentFrame;
-    this.accumulator += delta;
 
-    while (this.accumulator >= this.frameDuration) {
+    if (this.limitFps) {
+      if (delta >= this.frameDuration) {
+        this.lastFrame = currentFrame - (delta % this.frameDuration);
+        this.canvasContext.render();
+      }
+    } else {
+      this.lastFrame = currentFrame;
       this.canvasContext.render();
-      this.accumulator -= this.frameDuration;
     }
 
     this.rAF = requestAnimationFrame(this.animateFrame);
@@ -31,10 +40,8 @@ export default class Animator {
 
   start() {
     if (this.isRunning) return;
-
     this.isRunning = true;
     this.lastFrame = performance.now();
-    this.accumulator = 0;
     this.animateFrame();
   }
 

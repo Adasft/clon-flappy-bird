@@ -36,25 +36,22 @@ const { game, render } = Engine.createGame({
 class MainScene extends Engine.Scene {
   scale = 1;
   onCreate() {
-    this.text = this.add.text("Hola mundo", 150, 200);
-    this.bird = this.add
-      .sprite("bird", 100, 100)
-      .scale(3)
-      .origin(0.5)
-      .rotate(45);
+    // this.text = this.add.text("Hola mundo", 150, 200);
+    this.bird = this.add.sprite("bird", 100, 100).scale(3.2).origin(0.5);
     // .setRotation(0.1);
-    this.base = this.add
-      .image("base", 100, 100, 50, 50)
-      .origin(0)
-      .scale(this.scale);
+    // this.base = this.add
+    //   .image("base", 100, 100, 200, 200)
+    //   .origin(0.5)
+    //   .scale(this.scale);
 
-    console.log(this.bird);
+    // console.log(this.bird);
 
-    this.tileBase = this.add.tileSprite("base", 0, 600, 400, 100);
+    // this.tileBase = this.add.tileSprite("base", 0, 600, 400, 100);
 
-    // this.tile = this.add.tileSprite("tierra", 0, 300, 300, 600);
+    // this.tile = this.add.tileSprite("tierra", 200, 300, 356, 500).origin(0.5);
     // this.tile.tilePositionX = 0;
-    // this.tile.tilePositionY = 0;
+    // console.log(this.tile._origin, this.tile.x);
+    // this.tile.tilePositionX = 0;
 
     // console.log(this.bird._x);
 
@@ -63,11 +60,21 @@ class MainScene extends Engine.Scene {
   }
 
   onUpdate() {
-    // this.tile.tilePositionX += 0.5;
+    // this.tile.plusRotate(0.01);
+    // this.tile.tilePositionX += 1;
+    // this.tile.tilePositionY -= 2;
     // this.tile.tilePositionY += 1.5;
-    this.tileBase.tilePositionX -= 3;
+    // this.tileBase.tilePositionX -= 2;
   }
 }
+
+game.anims.create({
+  key: "fly",
+
+  frames: game.anims.generateFrameNumbers("player", { start: 0, end: 3 }),
+  frameRate: 10,
+  repeat: Engine.Anims.INFINITY,
+});
 
 game.scene.add("main", MainScene, Engine.SceneBehavior.PARALLEL);
 game.scene.add(

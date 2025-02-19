@@ -51,7 +51,7 @@ export default class GameEngine {
       scenesManager: this._scenesManager,
     });
 
-    this._animator = new Animator(this._canvasContext, frameRate);
+    this._animator = new Animator(this._canvasContext, { frameRate });
     this._context = new GameContext(this);
   }
 
@@ -158,7 +158,9 @@ function createGame(config) {
 
   return {
     game: gameContext,
-    render: (renderCallback) => engine.render(renderCallback),
+    render: () => {
+      engine.render();
+    },
   };
 }
 

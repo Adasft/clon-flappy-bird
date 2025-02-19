@@ -12,6 +12,12 @@ export default class DrawableTileSprite extends Drawable {
     this._tileHeight = frameHeight ?? this._tileSprite.height;
   }
 
+  setTileSize(width, height = width) {
+    this._tileWidth = width;
+    this._tileHeight = height;
+    return this;
+  }
+
   draw(ctx) {
     super.draw(ctx);
 
@@ -19,44 +25,30 @@ export default class DrawableTileSprite extends Drawable {
     ctx.rect(-this._origin.x, -this._origin.y, this.width, this.height);
     ctx.clip();
 
-    for (let y = this.tilePositionY; y < this.height; y += this._tileHeight) {
-      for (let x = this.tilePositionX; x > 0; x -= this._tileWidth) {
-        ctx.drawImage(
-          this._tileSprite,
-          x - this._tileWidth,
-          y,
-          this._tileWidth,
-          this._tileHeight
-        );
-      }
+    const initialDrawPositionX =
+      this.tilePositionX -
+      Math.ceil(this.tilePositionX / this._tileWidth) * this._tileWidth -
+      this._origin.x;
 
-      for (let x = this.tilePositionX; x < this.width; x += this._tileWidth) {
+    const initialDrawPositionY =
+      this.tilePositionY -
+      Math.ceil(this.tilePositionY / this._tileHeight) * this._tileHeight -
+      this._origin.y;
+
+    for (
+      let y = initialDrawPositionY;
+      y <= this.height;
+      y += this._tileHeight
+    ) {
+      for (
+        let x = initialDrawPositionX;
+        x <= this.width;
+        x += this._tileWidth
+      ) {
         ctx.drawImage(
           this._tileSprite,
           x,
           y,
-          this._tileWidth,
-          this._tileHeight
-        );
-      }
-    }
-
-    for (let y = this.tilePositionY; y > 0; y -= this._tileHeight) {
-      for (let x = this.tilePositionX; x > 0; x -= this._tileWidth) {
-        ctx.drawImage(
-          this._tileSprite,
-          x - this._tileWidth,
-          y - this._tileHeight,
-          this._tileWidth,
-          this._tileHeight
-        );
-      }
-
-      for (let x = this.tilePositionX; x < this.width; x += this._tileWidth) {
-        ctx.drawImage(
-          this._tileSprite,
-          x,
-          y - this._tileHeight,
           this._tileWidth,
           this._tileHeight
         );
