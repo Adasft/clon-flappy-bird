@@ -2,6 +2,8 @@ export default class Drawable {
   x = 0;
   y = 0;
 
+  key = null;
+
   _dimensions = {
     width: {
       original: 0,
@@ -30,10 +32,11 @@ export default class Drawable {
 
   _rotate = 0;
 
-  constructor(width, height) {
+  constructor(key, width, height) {
     this._dimensions.width.original = width;
     this._dimensions.height.original = height;
 
+    this.key = key;
     this.width = width;
     this.height = height;
   }

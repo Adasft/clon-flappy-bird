@@ -40,6 +40,14 @@ export default class SceneDrawablesAggregator {
     return this._orchestrators;
   }
 
+  find(key) {
+    return this._drawables.find((d) => d.key === key);
+  }
+
+  has(key) {
+    return !!this.find(key);
+  }
+
   _getLoadedResource(key, ...categories) {
     try {
       const categoriesNotFound = [];
@@ -89,7 +97,7 @@ export default class SceneDrawablesAggregator {
       return;
     }
 
-    const drawableImage = new DrawableImage(resource, { width, height });
+    const drawableImage = new DrawableImage(resource, { key, width, height });
     drawableImage.x = x;
     drawableImage.y = y;
 
@@ -111,6 +119,7 @@ export default class SceneDrawablesAggregator {
     }
 
     const drawableSprite = new DrawableSpriteSheet(resource.data, {
+      key,
       ...resource.config,
     });
     drawableSprite.x = x;
@@ -139,6 +148,7 @@ export default class SceneDrawablesAggregator {
 
     const tileSprite = resource.data ?? resource;
     const drawableTileSprite = new DrawableTileSprite(tileSprite, {
+      key,
       width,
       height,
       ...(resource.config ?? {}),

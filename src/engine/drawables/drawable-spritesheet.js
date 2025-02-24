@@ -1,8 +1,8 @@
 import Drawable from "./drawable.js";
 
 export default class DrawableSpriteSheet extends Drawable {
-  constructor(spritesheet, { frameWidth, frameHeight }) {
-    super(frameWidth, frameHeight);
+  constructor(spritesheet, { key, frameWidth, frameHeight }) {
+    super(key, frameWidth, frameHeight);
     this._spritesheet = spritesheet;
     this._currentFrame = 0;
     this.frameWidth = frameWidth;
@@ -18,7 +18,7 @@ export default class DrawableSpriteSheet extends Drawable {
   }
 
   set currentFrame(frame) {
-    return Math.max(frame, 0);
+    this._currentFrame = Math.max(frame, 0);
   }
 
   get currentFrame() {

@@ -18,9 +18,9 @@ const { game, render } = Engine.createGame({
   },
   onPreload() {
     game.load.image("base", "../assets/images/base.png");
-    game.load.image("tierra", "https://cdn.phaser.io/sandbox/square-earth.png");
+    game.load.image("earth", "https://cdn.phaser.io/sandbox/square-earth.png");
     game.load.spritesheet("bird", "../assets/sprites/bird-flap-sprites.png", {
-      frameWidth: 17.66,
+      frameWidth: 21,
       frameHeight: 12,
     });
   },
@@ -36,45 +36,33 @@ const { game, render } = Engine.createGame({
 class MainScene extends Engine.Scene {
   scale = 1;
   onCreate() {
-    // this.text = this.add.text("Hola mundo", 150, 200);
-    this.bird = this.add.sprite("bird", 100, 100).scale(3.2).origin(0.5);
-    // .setRotation(0.1);
-    // this.base = this.add
-    //   .image("base", 100, 100, 200, 200)
-    //   .origin(0.5)
-    //   .scale(this.scale);
+    this.physics.enable({});
 
-    // console.log(this.bird);
+    // this.bird =
 
-    // this.tileBase = this.add.tileSprite("base", 0, 600, 400, 100);
+    this.bird = this.physics
+      .add(this.add.sprite("bird", 100, 100).scale(3.2).origin(0.5))
+      .physics({});
 
-    // this.tile = this.add.tileSprite("tierra", 200, 300, 356, 500).origin(0.5);
-    // this.tile.tilePositionX = 0;
-    // console.log(this.tile._origin, this.tile.x);
-    // this.tile.tilePositionX = 0;
+    this.anims.create({
+      key: "fly",
+      sprite: this.bird,
+      frames: this.anims.frameRanges({ start: 0, end: 2 }),
+      frameRate: 9, // -> [0, 1,2,3,5]
+      repeat: -1,
+    });
 
-    // console.log(this.bird._x);
+    this.anims.play("fly");
 
-    // this.bird.scale.x = 5;
-    // this.bird.scale.y = 5;
+    this.earth = this.add.image("earth", 200, 300).origin(0.5);
   }
 
-  onUpdate() {
-    // this.tile.plusRotate(0.01);
-    // this.tile.tilePositionX += 1;
-    // this.tile.tilePositionY -= 2;
-    // this.tile.tilePositionY += 1.5;
-    // this.tileBase.tilePositionX -= 2;
+  onUpdate(time) {
+    // this.earth.plusRotate(0.005);
+    // this.earth.y = this.earth.y + Math.sin((time / 1000) * 2);
+    this.bird.y = this.bird.y + Math.sin((time / 500) * 2);
   }
 }
-
-game.anims.create({
-  key: "fly",
-
-  frames: game.anims.generateFrameNumbers("player", { start: 0, end: 3 }),
-  frameRate: 10,
-  repeat: Engine.Anims.INFINITY,
-});
 
 game.scene.add("main", MainScene, Engine.SceneBehavior.PARALLEL);
 game.scene.add(

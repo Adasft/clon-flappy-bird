@@ -1,6 +1,6 @@
 import Loader from "./loader.js";
 import { createFormatterErrors, noop } from "./utils.js";
-import Animator from "./animator.js";
+import StepFrame from "./step-frame.js";
 import ScenesManager from "./scene/scenes-manager.js";
 import CanvasContext from "./canvas-context.js";
 import GameContext from "./game-context.js";
@@ -51,7 +51,7 @@ export default class GameEngine {
       scenesManager: this._scenesManager,
     });
 
-    this._animator = new Animator(this._canvasContext, { frameRate });
+    this._stepFrame = new StepFrame(this._canvasContext, { frameRate });
     this._context = new GameContext(this);
   }
 
@@ -130,12 +130,12 @@ export default class GameEngine {
   }
 
   run() {
-    this._animator.start();
+    this._stepFrame.start();
     this.running = true;
   }
 
   stop() {
-    this._animator.stop();
+    this._stepFrame.stop();
     this.running = false;
   }
 

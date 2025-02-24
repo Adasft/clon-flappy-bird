@@ -30,3 +30,8 @@ export const AngleMode = {
   RADIANS: "radians",
   DEGRESS: "degress",
 };
+
+export const Anims = {
+  INFINITY: -1,
+  ONCE: 1,
+};

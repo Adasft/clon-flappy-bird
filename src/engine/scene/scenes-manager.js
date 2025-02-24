@@ -24,10 +24,11 @@ export default class ScenesManager {
     return this._orchestrators;
   }
 
-  display(ctx) {
+  display(ctx, time) {
     for (const scene of this._renderedScenes) {
       if (!scene.isPaused) {
-        scene.onUpdate();
+        scene.onUpdate(time);
+        scene.runAnimations(time);
       }
       scene.drawDrawables(ctx);
     }

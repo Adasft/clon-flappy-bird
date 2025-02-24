@@ -1,4 +1,4 @@
-export default class Animator {
+export default class StepFrame {
   rAF = null;
 
   /**
@@ -16,7 +16,7 @@ export default class Animator {
     this.isRunning = false;
   }
 
-  animateFrame = () => {
+  step = (time) => {
     if (!this.isRunning) {
       cancelAnimationFrame(this.rAF);
       return;
@@ -28,21 +28,21 @@ export default class Animator {
     if (this.limitFps) {
       if (delta >= this.frameDuration) {
         this.lastFrame = currentFrame - (delta % this.frameDuration);
-        this.canvasContext.render();
+        this.canvasContext.render(time);
       }
     } else {
       this.lastFrame = currentFrame;
-      this.canvasContext.render();
+      this.canvasContext.render(time);
     }
 
-    this.rAF = requestAnimationFrame(this.animateFrame);
+    this.rAF = requestAnimationFrame(this.step);
   };
 
   start() {
     if (this.isRunning) return;
     this.isRunning = true;
     this.lastFrame = performance.now();
-    this.animateFrame();
+    this.step();
   }
 
   stop() {

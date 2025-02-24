@@ -4,8 +4,8 @@ export default class DrawableTileSprite extends Drawable {
   tilePositionX = 0;
   tilePositionY = 0;
 
-  constructor(tileSprite, { width, height, frameWidth, frameHeight }) {
-    super(width, height);
+  constructor(tileSprite, { key, width, height, frameWidth, frameHeight }) {
+    super(key, width, height);
 
     this._tileSprite = tileSprite;
     this._tileWidth = frameWidth ?? this._tileSprite.width;
