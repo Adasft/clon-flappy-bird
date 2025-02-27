@@ -19,6 +19,13 @@ export default class GameContext {
     return this._engine.angleMode;
   }
 
+  get sys() {
+    return {
+      width: this._engine.canvasContext.width,
+      height: this._engine.canvasContext.height,
+    };
+  }
+
   play() {
     if (this._engine.running) return;
     this._engine.run();

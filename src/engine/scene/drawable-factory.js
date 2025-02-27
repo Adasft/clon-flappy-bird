@@ -14,7 +14,7 @@ import DrawableTileSprite from "../drawables/drawable-tile-sprite.js";
  * @implements {Orchestrator}
  *
  */
-export default class SceneDrawablesAggregator {
+export default class DrawableFactory {
   /**
    * @type {Array<Drawable>}
    */
@@ -27,9 +27,10 @@ export default class SceneDrawablesAggregator {
     text: this._addDrawableText.bind(this),
   };
 
-  constructor(resources) {
+  constructor(scene, resources) {
+    this._scene = scene;
     this._resources = resources;
-    this._formatError = createFormatterErrors(SceneDrawablesAggregator);
+    this._formatError = createFormatterErrors(DrawableFactory);
   }
 
   get drawables() {
@@ -46,6 +47,15 @@ export default class SceneDrawablesAggregator {
 
   has(key) {
     return !!this.find(key);
+  }
+
+  render(ctx, { time, delta }, enabledPhysics) {
+    for (const drawable of this._drawables) {
+      if (enabledPhysics && drawable.hasBody) {
+        drawable.body.update(delta);
+      }
+      drawable.draw(ctx, { time, delta });
+    }
   }
 
   _getLoadedResource(key, ...categories) {
@@ -97,7 +107,11 @@ export default class SceneDrawablesAggregator {
       return;
     }
 
-    const drawableImage = new DrawableImage(resource, { key, width, height });
+    const drawableImage = new DrawableImage(this._scene, resource, {
+      key,
+      width,
+      height,
+    });
     drawableImage.x = x;
     drawableImage.y = y;
 
@@ -118,7 +132,7 @@ export default class SceneDrawablesAggregator {
       return;
     }
 
-    const drawableSprite = new DrawableSpriteSheet(resource.data, {
+    const drawableSprite = new DrawableSpriteSheet(this._scene, resource.data, {
       key,
       ...resource.config,
     });
@@ -147,7 +161,7 @@ export default class SceneDrawablesAggregator {
     }
 
     const tileSprite = resource.data ?? resource;
-    const drawableTileSprite = new DrawableTileSprite(tileSprite, {
+    const drawableTileSprite = new DrawableTileSprite(this._scene, tileSprite, {
       key,
       width,
       height,
@@ -161,7 +175,7 @@ export default class SceneDrawablesAggregator {
   }
 
   _addDrawableText(text, x, y) {
-    const drawableText = new DrawableText(text);
+    const drawableText = new DrawableText(this._scene, text);
 
     drawableText.x = x;
     drawableText.y = y;

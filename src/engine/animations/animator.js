@@ -27,17 +27,17 @@ export default class Animator {
     return this._orchestrators;
   }
 
-  _frameRanges({ start, end }) {
-    return Array(end - start + 1)
-      .fill(start)
-      .map((v, i) => v + i);
-  }
-
-  runAnimations(time) {
+  playAll(time) {
     for (const key of this._runningAnimsKeys) {
       const animation = this._animations.get(key);
       animation.run(time);
     }
+  }
+
+  _frameRanges({ start, end }) {
+    return Array(end - start + 1)
+      .fill(start)
+      .map((v, i) => v + i);
   }
 
   _createAnimation({ key, sprite, frames, frameRate, repeat }) {

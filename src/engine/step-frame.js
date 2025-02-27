@@ -28,11 +28,11 @@ export default class StepFrame {
     if (this.limitFps) {
       if (delta >= this.frameDuration) {
         this.lastFrame = currentFrame - (delta % this.frameDuration);
-        this.canvasContext.render(time);
+        this.canvasContext.render(time, delta);
       }
     } else {
       this.lastFrame = currentFrame;
-      this.canvasContext.render(time);
+      this.canvasContext.render(time, delta);
     }
 
     this.rAF = requestAnimationFrame(this.step);

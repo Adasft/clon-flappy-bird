@@ -105,10 +105,10 @@ export default class CanvasContext {
     this._context.restore();
   }
 
-  render(time) {
+  render(time, delta) {
     this._context.clearRect(0, 0, this.width, this.height);
     this.drawBackground();
-    this._scenesManager.display(this._context, time);
+    this._scenesManager.display(this._context, { time, delta });
   }
 
   _calcBackgroundDimensionForContainFit() {

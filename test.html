@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      body {
+        background-color: #333;
+      }
+
+      canvas {
+        border: 1px solid #111;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas" width="500" height="500"></canvas>
+    <br />
+    <br />
+    <hr />
+    <br />
+    <button id="stopBtn">Stop</button>
+    <button onclick="add(0.5)">+</button>
+    <button onmousedown="add(-400)">-</button>
+    <script>
+      const stopBtn = document.getElementById("stopBtn");
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+      let stopRaF = false;
+      let raF;
+
+      stopBtn.addEventListener("click", () => {
+        stopRaF = !stopRaF;
+        stopBtn.textContent = stopRaF ? "start" : "stop";
+
+        if (!stopRaF) {
+          raF = requestAnimationFrame(update);
+        }
+      });
+
+      function add(v) {
+        vy = v;
+
+        console.log(vy);
+      }
+
+      // y = y_0 + v_0 t + \frac{1}{2} g t^2
+
+      let x = 0,
+        y = 0;
+      //   v0 = 0,
+      //   g = 2200;
+      let lastFrame = 0;
+      //   t = 0,
+      //   lt = 0;
+
+      let onGround = true;
+      let vy = 0,
+        ay = 0,
+        mass = 1,
+        friction = 1,
+        gravityY = 1900,
+        forceY = 1000,
+        Cd = 0.1, // Coeficiente de arrastre (esfera)
+        rho = 1.225, // Densidad del aire (kg/m³)
+        A = 0.1;
+
+      function update(time) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // ctx.fillText(y, 100, 200);
+
+        // if (y >= canvas.height - 20) {
+        //   y = canvas.height - 20;
+        // } else {
+        //   const delta = time - lastFrame;
+        //   lastFrame = time;
+
+        //   t += delta / 100;
+        // }
+
+        // y = v0 * t + 0.5 * g * t * t;
+
+        const delta = time - lastFrame;
+        lastFrame = time;
+
+        const t = delta / 1000;
+
+        // const Fy = mass * gravityY + forceY;
+
+        // // ay = gravityY;
+        // ay = Fy / mass;
+        // console.log(ay);
+        // vy += ay * t;
+        // vy *= friction;
+
+        // y += vy * t;
+
+        // Calcular fuerza de arrastre (Fd = 0.5 * Cd * rho * A * v²)
+        let Fd = 0.5 * Cd * rho * A * vy * vy;
+        Fd = vy > 0 ? Fd : -Fd; // Mantener dirección opuesta a la velocidad
+
+        // Fuerza total en Y (peso - resistencia del aire)
+        let Fy = mass * gravityY - Fd;
+
+        // Aceleración en Y
+        let ay = Fy / mass;
+
+        // Actualizar velocidad
+        vy += ay * t;
+        vy *= friction;
+
+        // Actualizar posición
+        y += vy * t;
+
+        if (y >= canvas.height - 20) {
+          y = canvas.height - 20;
+          vy = 0;
+        }
+
+        ctx.fillStyle = "#111";
+        ctx.fillRect(100, y, 20, 20);
+        // ctx.fillText(v0, 100, 100);
+
+        if (stopRaF) {
+          cancelAnimationFrame(raF);
+          return;
+        }
+
+        raF = requestAnimationFrame(update);
+      }
+
+      raF = requestAnimationFrame(update);
+    </script>
+  </body>
+</html>

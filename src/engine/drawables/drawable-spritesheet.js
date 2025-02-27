@@ -1,8 +1,8 @@
-import Drawable from "./drawable.js";
+import DynamicDrawable from "./dynamic-drawable.js";
 
-export default class DrawableSpriteSheet extends Drawable {
-  constructor(spritesheet, { key, frameWidth, frameHeight }) {
-    super(key, frameWidth, frameHeight);
+export default class DrawableSpriteSheet extends DynamicDrawable {
+  constructor(scene, spritesheet, { key, frameWidth, frameHeight }) {
+    super(scene, key, frameWidth, frameHeight);
     this._spritesheet = spritesheet;
     this._currentFrame = 0;
     this.frameWidth = frameWidth;
@@ -25,8 +25,8 @@ export default class DrawableSpriteSheet extends Drawable {
     return this._currentFrame;
   }
 
-  draw(ctx) {
-    super.draw(ctx);
+  draw(ctx, time) {
+    super.draw(ctx, time);
     ctx.drawImage(
       this._spritesheet,
       this.frameX,

@@ -1,3 +1,5 @@
+import { createVector } from "../utils.js";
+
 export default class Drawable {
   x = 0;
   y = 0;
@@ -15,24 +17,16 @@ export default class Drawable {
     },
   };
 
-  _scale = {
-    x: 1,
-    y: 1,
-  };
+  _scale = createVector(1, 1);
 
-  _origin = {
-    x: 0,
-    y: 0,
-  };
+  _origin = createVector();
 
-  _originRatio = {
-    x: 0,
-    y: 0,
-  };
+  _originRatio = createVector();
 
   _rotate = 0;
 
-  constructor(key, width, height) {
+  constructor(scene, key, width, height) {
+    this._scene = scene;
     this._dimensions.width.original = width;
     this._dimensions.height.original = height;
 

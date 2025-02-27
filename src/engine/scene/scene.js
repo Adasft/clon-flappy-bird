@@ -1,13 +1,15 @@
 import Animator from "../animations/animator.js";
+import PhysicsSystem from "../physics/physics-system.js";
 import { noop } from "../utils.js";
-import SceneDrawablesAggregator from "./scene-drawables-aggregator.js";
+import DrawableFactory from "./drawable-factory.js";
 
 export default class Scene {
   name;
   game;
   behavior;
   _engine;
-  _aggregator;
+  _drawableFactory;
+  _physicsSystem;
   _animator;
   _isPaused = false;
 
@@ -28,22 +30,31 @@ export default class Scene {
     scene._engine = engine;
     scene._getAngleMode = getAngleMode;
 
-    scene._aggregator = new SceneDrawablesAggregator(engine.loader.resources);
+    scene._drawableFactory = new DrawableFactory(
+      scene,
+      engine.loader.resources
+    );
+
     scene._animator = new Animator(scene);
+    scene._physicsSystem = new PhysicsSystem(engine.context);
 
     return scene;
   }
 
   /**
    * Gets the aggregator for adding resources.
-   * @returns {SceneDrawablesAggregator} - The aggregator instance.
+   * @returns {DrawableFactory} - The aggregator instance.
    */
   get add() {
-    return this._aggregator.getOrchestrators();
+    return this._drawableFactory.getOrchestrators();
   }
 
   get anims() {
     return this._animator.getOrchestrators();
+  }
+
+  get physics() {
+    return this._physicsSystem.getOrchestrators();
   }
 
   get isPaused() {
@@ -54,12 +65,16 @@ export default class Scene {
     return this._engine.angleMode;
   }
 
+  get enabledPhysics() {
+    return this._physicsSystem.isEnabled;
+  }
+
   getDrawable(key) {
-    return this._aggregator.find(key);
+    return this._drawableFactory.find(key);
   }
 
   hasDrawable(key) {
-    return this._aggregator.has(key);
+    return this._drawableFactory.has(key);
   }
 
   start() {
@@ -70,14 +85,12 @@ export default class Scene {
     this._isPaused = true;
   }
 
-  drawDrawables(ctx) {
-    for (const drawable of this._aggregator.drawables) {
-      drawable.draw(ctx);
+  display(ctx, { time, delta }) {
+    if (!this.isPaused) {
+      this.onUpdate(time, delta);
+      this._animator.playAll(time);
     }
-  }
-
-  runAnimations(time) {
-    this._animator.runAnimations(time);
+    this._drawableFactory.render(ctx, { time, delta }, this.enabledPhysics);
   }
 }
 

@@ -1,8 +1,8 @@
 import Drawable from "./drawable.js";
 
 export default class DrawableText extends Drawable {
-  constructor(text) {
-    super();
+  constructor(scene, text) {
+    super(scene);
     this._text = text;
   }
 

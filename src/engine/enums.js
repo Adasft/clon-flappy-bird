@@ -6,32 +6,37 @@ export const ResourceCategories = {
 };
 
 export const SceneBehavior = {
-  DESTROY: "destroy",
-  PAUSE: "pause",
-  PARALLEL: "parallel",
+  DESTROY: Symbol(),
+  PAUSE: Symbol(),
+  PARALLEL: Symbol(),
 };
 
 export const CanvasBackgroundImageFit = {
-  COVER: "cover",
-  CONTAIN: "contain",
-  FILL: "fill",
-  NONE: "none",
+  COVER: Symbol(),
+  CONTAIN: Symbol(),
+  FILL: Symbol(),
+  NONE: Symbol(),
 };
 
 export const CanvasBackgroundImagePosition = {
-  CENTER: "center",
-  LEFT: "left",
-  RIGHT: "right",
-  TOP: "top",
-  BOTTOM: "bottom",
+  CENTER: Symbol(),
+  LEFT: Symbol(),
+  RIGHT: Symbol(),
+  TOP: Symbol(),
+  BOTTOM: Symbol(),
 };
 
 export const AngleMode = {
-  RADIANS: "radians",
-  DEGRESS: "degress",
+  RADIANS: Symbol(),
+  DEGRESS: Symbol(),
 };
 
 export const Anims = {
   INFINITY: -1,
   ONCE: 1,
+};
+
+export const BodyShape = {
+  RECT: Symbol(),
+  CIRCLE: Symbol(),
 };

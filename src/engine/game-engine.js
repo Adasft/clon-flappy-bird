@@ -159,6 +159,7 @@ function createGame(config) {
   return {
     game: gameContext,
     render: () => {
+      console.log("render");
       engine.render();
     },
   };

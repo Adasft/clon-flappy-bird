@@ -33,16 +33,26 @@ const { game, render } = Engine.createGame({
   },
 });
 
+let vy = 0;
 class MainScene extends Engine.Scene {
   scale = 1;
   onCreate() {
-    this.physics.enable({});
+    this.physics.enable();
 
     // this.bird =
 
-    this.bird = this.physics
-      .add(this.add.sprite("bird", 100, 100).scale(3.2).origin(0.5))
-      .physics({});
+    this.bird = this.add
+      .sprite("bird", 100, 100)
+      .scale(3.2)
+      .origin(0.5)
+      // .rotate(0.7)
+      .setPhysics({
+        gravity: { y: 1000, x: 0 },
+        drag: 0.2,
+        mass: 100,
+      });
+
+    console.log(this.bird);
 
     this.anims.create({
       key: "fly",
@@ -54,13 +64,18 @@ class MainScene extends Engine.Scene {
 
     this.anims.play("fly");
 
-    this.earth = this.add.image("earth", 200, 300).origin(0.5);
+    // this.earth = this.add.image("earth", 200, 300).origin(0.5);
   }
 
   onUpdate(time) {
+    if (vy < 0) {
+      this.bird.body.velocity.y = vy;
+      vy = 0;
+    }
+
     // this.earth.plusRotate(0.005);
     // this.earth.y = this.earth.y + Math.sin((time / 1000) * 2);
-    this.bird.y = this.bird.y + Math.sin((time / 500) * 2);
+    // this.bird.y = this.bird.y + Math.sin((time / 500) * 2);
   }
 }
 
@@ -75,14 +90,19 @@ game.scene.add(
   Engine.SceneBehavior.PARALLEL
 );
 
+console.log(render);
 render();
 
 document.body.addEventListener("click", () => {
-  game.pause();
+  vy = -500;
 });
 
 document.addEventListener("keypress", (e) => {
   if (e.key === "a") {
     game.play();
+  } else if (e.key === "s") {
+    game.pause();
+  } else if (e.key === "j") {
+    vy = -400;
   }
 });

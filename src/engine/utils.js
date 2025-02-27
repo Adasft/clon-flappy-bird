@@ -39,3 +39,26 @@ export function when(currentCase, caseHandlers) {
 }
 
 export function noop() {}
+
+export function createVector(x = 0, y = 0) {
+  const vector = { x, y };
+  const vectorSetter = (x, y) => {
+    vector.x = typeof x === "number" ? x : vector.x;
+    vector.y = typeof y === "number" ? y : vector.y;
+  };
+
+  Object.defineProperty(vector, "set", {
+    get() {
+      return vectorSetter;
+    },
+  });
+
+  return vector;
+}
+
+const el = document.getElementById("text");
+export const log = (text) => {
+  setTimeout(() => {
+    el.textContent = text;
+  }, 500);
+};

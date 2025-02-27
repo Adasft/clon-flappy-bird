@@ -319,10 +319,22 @@ interface GlobalPhysicsOptions {
 
 }
 
-interface Body {}
+// this.physics.add.collider(obj1, obj2, callback?);  // Maneja colisiones
+// this.physics.add.overlap(obj1, obj2, callback?);  // Detecta superposición sin colisión
+// this.physics.add.existing(obj);                   // Agrega un objeto existente a físicas
+// this.physics.add.group(options?);                 // Crea un grupo de objetos dinámicos
+// this.physics.add.staticGroup(options?);           // Crea un grupo de objetos estáticos
+// this.physics.add.enableBody(obj, type?);          // Habilita físicas en un objeto
+// this.physics.add.moveTo(obj, x, y, speed?);       // Mueve un objeto a una posición
+// this.physics.add.velocityFromAngle(angle, speed); // Calcula velocidad desde ángulo
+interface PhysicsInteractionManager {
+  collider: (objectA: Drawable, objectB: Drawable, callback?: () => void) => void
+  overlap: (objectA: Drawable, objectB: Drawable, callback?: () => void) => void
+  existing: (object: Drawable) => void
+}
 
 interface PhysicsOrchestrators {
   enable: (options: GlobalPhysicsOptions) => void
   disable: () => void
-  add: (...objects: Drawable[]) => Drawable
+  add: PhysicsInteractionManager
 }
