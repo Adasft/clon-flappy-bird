@@ -83,15 +83,12 @@ export default class Body {
     this._acceleration.x = Fx / this.mass;
     this._acceleration.y = Fy / this.mass;
 
-    // console.log(this.velocity.y);
     this.velocity.x = this._calcVelocity(this.velocity.x, this._acceleration.x);
     this.velocity.y = this._calcVelocity(this.velocity.y, this._acceleration.y);
-    // log(this.velocity.y * this.deltaTimeFrame);
 
     this.position.x += this.velocity.x * this.deltaTimeFrame;
     this.position.y += this.velocity.y * this.deltaTimeFrame;
 
-    // console.log(this.position);
     if (this.colliderWordBounds) {
       this._detectColisionWordBoundaries();
     }

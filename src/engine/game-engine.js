@@ -11,6 +11,7 @@ import {
   SceneBehavior,
   AngleMode,
 } from "./enums.js";
+import GameInput from "./input/game-input.js";
 
 export default class GameEngine {
   running = false;
@@ -40,7 +41,7 @@ export default class GameEngine {
     this._formatError = createFormatterErrors(GameEngine);
 
     this._loader = new Loader(this.onLoadingProgress);
-    this._scenesManager = new ScenesManager(this);
+    this._scenes = new ScenesManager(this);
 
     this._canvasContext = new CanvasContext({
       parentRenderer,
@@ -48,8 +49,10 @@ export default class GameEngine {
       aspectRatio,
       scale,
       background: { image, color },
-      scenesManager: this._scenesManager,
+      scenesManager: this._scenes,
     });
+
+    this._input = new GameInput(this._canvasContext);
 
     this._stepFrame = new StepFrame(this._canvasContext, { frameRate });
     this._context = new GameContext(this);
@@ -63,8 +66,12 @@ export default class GameEngine {
     return this._loader;
   }
 
-  get scenesManager() {
-    return this._scenesManager;
+  get scenes() {
+    return this._scenes;
+  }
+
+  get input() {
+    return this._input;
   }
 
   get context() {
@@ -120,7 +127,7 @@ export default class GameEngine {
 
     await this.preload();
 
-    this._scenesManager.create();
+    this._scenes.create();
 
     this.onRender();
 

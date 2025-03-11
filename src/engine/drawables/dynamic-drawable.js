@@ -17,6 +17,8 @@ export default class DynamicDrawable extends Drawable {
   }
 
   setPhysics(config) {
+    // if(!this._scene.physics.isEnabled) return
+
     if (!this._body) {
       const defaults = this._scene.physics.getDefaults();
       const bounds = this._scene.physics.getWordBounds();

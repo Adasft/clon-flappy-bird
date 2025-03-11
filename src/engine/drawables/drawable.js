@@ -1,8 +1,8 @@
-import { createVector } from "../utils.js";
+import { createVector, log } from "../utils.js";
 
 export default class Drawable {
-  x = 0;
-  y = 0;
+  _x = 0;
+  _y = 0;
 
   key = null;
 
@@ -33,6 +33,30 @@ export default class Drawable {
     this.key = key;
     this.width = width;
     this.height = height;
+  }
+
+  set x(x) {
+    this._x = x;
+
+    if (this.hasBody) {
+      this.body.position.x = x;
+    }
+  }
+
+  get x() {
+    return this._x;
+  }
+
+  set y(y) {
+    this._y = y;
+
+    if (this.hasBody) {
+      this.body.position.y = y;
+    }
+  }
+
+  get y() {
+    return this._y;
   }
 
   set width(width) {
@@ -97,7 +121,13 @@ export default class Drawable {
 
   draw(ctx) {
     ctx.save();
+    // if (this.hasBody) {
+    //   log(this.body.position.x);
+    //   ctx.translate(this.body.position.x, this.body.position.y);
+    // } else {
+    // }
     ctx.translate(this.x, this.y);
+
     ctx.rotate(this._rotate);
   }
 }

@@ -8,7 +8,13 @@ export default class GameContext {
   }
 
   get scene() {
-    return this._engine.scenesManager.getOrchestrators();
+    return this._engine.scenes.getOrchestrators();
+  }
+
+  get input() {
+    return {
+      keyboard: this._engine.input.keyboard.getOrchestrators(),
+    };
   }
 
   set angleMode(mode) {

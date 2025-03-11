@@ -47,6 +47,8 @@ export default class CanvasContext {
       );
     }
 
+    this._canvas.setAttribute("tabindex", "0");
+
     this._adjustViewport();
     this._configBackground(background);
   }

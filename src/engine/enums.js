@@ -40,3 +40,8 @@ export const BodyShape = {
   RECT: Symbol(),
   CIRCLE: Symbol(),
 };
+
+export const KeyboardEvents = {
+  PRESSED: Symbol("pressed"),
+  RELEASED: Symbol("released"),
+};
