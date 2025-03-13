@@ -69,12 +69,53 @@ class MainScene extends Engine.Scene {
 
     this.keys = keyboard.getKeys();
 
-    keyboard.on("KeyA", "pressed", () => {
-      console.log("KeyA");
+    // keyboard.on("released", (event) => {
+    //   console.log(event);
+    // });
+
+    keyboard.on("combomatched", (event) => {
+      console.log(event);
     });
 
-    keyboard.on("KeyA", "released", () => {
-      console.log("KeyA+KeyB Relased");
+    keyboard.on("combofailed", (event) => {
+      console.log(event);
+    });
+
+    this.jumpCombo = keyboard.createCombo("ABCD", {
+      timeLimit: 2000,
+      isOrdered: true,
+      onmatched: () => {
+        console.log("ABCD Matched");
+      },
+    });
+
+    keyboard.createCombo("ABCDE", {
+      timeLimit: 20000,
+      isOrdered: false,
+      duration: 5000,
+      onmatched: () => {
+        console.log("ABCDE Matched");
+      },
+    });
+
+    // keyboard.createCombo("QWER", {
+    //   timeLimit: 20000,
+    //   isOrdered: true,
+    //   onMatched: () => {
+    //     console.log("QWER Matched");
+    //   },
+    // });
+
+    // keyboard.on("released", () => {
+    //   console.log("KeyA+KeyB Relased");
+    // });
+
+    // keyboard.on("typing", () => {
+    //   console.log("KeyA+KeyB Relased");
+    // });
+
+    this.keys.ArrowUp.onPressed((event) => {
+      console.log("ArrowUp", event);
     });
 
     // this.jumpCommand = keyboard.compine(
@@ -107,6 +148,7 @@ class MainScene extends Engine.Scene {
     // if(this.jumpCommand.isPressed) {
     //   this.bird.body.velocity.y = -1000;
     // }
+
     if (this.keys.ArrowUp.isPressed) {
       // console.log(this.keys.ArrowUp);
       this.bird.body.velocity.y = -1000;

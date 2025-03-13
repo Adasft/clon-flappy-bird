@@ -15,8 +15,8 @@
 // Keyboard. enable()
 // Reactiva la detección de teclado.
 
-import { KeyboardEvents } from "../../enums.js";
-import { when } from "../../utils.js";
+import { KeyComboTestReason, KeyboardEvents } from "../../enums.js";
+import { noop, when } from "../../utils.js";
 
 class Key {
   _state = {
@@ -301,11 +301,226 @@ class KeyboardKeys {
 
 class KeyBindings {}
 
+class KeyCombo {
+  _isEnabled = true;
+  _isActive = false;
+  _isFailed = false;
+  _keysBuffer = [];
+
+  constructor({
+    keys = "",
+    timeLimit = Infinity,
+    duration = Infinity,
+    isOrdered = true,
+    onmatched = () => {},
+  }) {
+    this.keys = keys.split("").map((key) => key.toUpperCase());
+    this.timeLimit = timeLimit;
+    this.duration = duration;
+    this.isOrdered = isOrdered;
+    this.onmatched = onmatched;
+  }
+
+  get isEnabled() {
+    return this._isEnabled;
+  }
+
+  get isActive() {
+    return this._isActive;
+  }
+
+  get isFailed() {
+    return this._isFailed;
+  }
+
+  enable() {
+    this._isEnabled = true;
+  }
+
+  disable() {
+    this._isEnabled = false;
+  }
+
+  fail() {
+    this._isFailed = true;
+  }
+
+  test(keyMap) {
+    const { key, time } = keyMap;
+    const isValidTimeLimit = this.timeLimit > time;
+    const isValidKey = this.keys.includes(key);
+    const isOrderValid = !this.isOrdered || this._containsOrderedKey();
+    const isValid = isValidTimeLimit && isValidKey && isOrderValid;
+
+    this._keysBuffer.push(key);
+
+    const result = {
+      isValid,
+      reason: KeyComboTestReason.PENDING,
+    };
+
+    if (!isValid) {
+      if (!isValidTimeLimit)
+        result.reason = KeyComboTestReason.TIME_LIMIT_EXCEEDED;
+      else if (!isValidKey) result.reason = KeyComboTestReason.INVALID_KEY;
+      else if (!isOrderValid) result.reason = KeyComboTestReason.ORDER_MISMATCH;
+    } else if (this.keys.length === this._keysBuffer.length) {
+      result.reason = KeyComboTestReason.MATCHED;
+      this.onmatched();
+    }
+
+    return result;
+  }
+
+  reset() {
+    this._lastKeyTime = null;
+    this._keysBuffer = [];
+    this._isFailed = false;
+  }
+
+  activate() {
+    this._isActive = true;
+    this._keysBuffer = [];
+
+    if (this.duration !== Infinity) {
+      setTimeout(() => {
+        this.desactivate();
+      }, this.duration);
+    }
+  }
+
+  desactivate() {
+    this._isActive = false;
+  }
+
+  _containsOrderedKey() {
+    const lastIndex = this._keysBuffer.length - 1;
+    return this._keysBuffer[lastIndex] === this.keys[lastIndex];
+  }
+}
+
+class KeyComboDurationTimer {}
+
+class KeyComboWatcher {
+  _combos = new Set();
+  _inCombo = false;
+  _trackedKey = null;
+  _failedCombos = new Set();
+  _pendingCombos = new Set();
+  _comboKeysMap = new Map();
+  _lastKeyTime = null;
+
+  oncombomatched = noop;
+  oncombofailed = noop;
+
+  constructor(frameCallbacks) {
+    this._frameCallbacks = frameCallbacks;
+  }
+
+  watch(keyCombo) {
+    keyCombo.keys.forEach((key) => {
+      const count = (this._comboKeysMap.get(key) ?? 0) + 1;
+      this._comboKeysMap.set(key, count);
+    });
+
+    this._combos.add(keyCombo);
+  }
+
+  unwatch(keyCombo) {
+    if (!this._comboKeysMap.has(keyCombo)) return;
+
+    keyCombo.keys.forEach((key) => {
+      const count = this._comboKeysMap.get(key) - 1;
+
+      if (count === 0) {
+        this._comboKeysMap.delete(key);
+      } else {
+        this._comboKeysMap.set(key, count);
+      }
+    });
+
+    this._combos.delete(keyCombo);
+  }
+
+  isEmpty() {
+    return !!this._combos.length;
+  }
+
+  trackKey(key) {
+    const now = performance.now();
+    const keyMap = {
+      key: key.toUpperCase(),
+      time: 0,
+    };
+
+    this._inCombo = this._inCombo || this._comboKeysMap.has(keyMap.key);
+
+    if (!this._inCombo) {
+      this._lastKeyTime = null;
+      return;
+    }
+
+    if (this._lastKeyTime) {
+      keyMap.time = now - this._lastKeyTime;
+    }
+
+    this._trackedKey = keyMap;
+
+    this._lastKeyTime = now;
+    this._checkCombos();
+  }
+
+  _checkCombos() {
+    for (const combo of this._combos) {
+      if (!combo.isEnabled || combo.isActive || combo.isFailed) continue;
+
+      const { isValid, reason } = combo.test(this._trackedKey);
+
+      if (!isValid) {
+        this._handleComboFailure(combo, reason);
+      } else if (reason === KeyComboTestReason.PENDING) {
+        this._pendingCombos.add(combo);
+      } else if (reason === KeyComboTestReason.MATCHED) {
+        this._handleComboMatch(combo, reason);
+      }
+    }
+
+    if (this._pendingCombos.size === 0) {
+      this._resetFailedCombos();
+    }
+  }
+
+  _handleComboFailure(combo, reason) {
+    combo.fail();
+    this.oncombofailed(combo, reason);
+    this._resetComboState(combo);
+    this._failedCombos.add(combo);
+  }
+
+  _handleComboMatch(combo, reason) {
+    combo.activate();
+    this.oncombomatched(combo, reason);
+    this._resetComboState(combo);
+  }
+
+  _resetComboState(combo) {
+    this._inCombo = false;
+    this._pendingCombos.delete(combo);
+  }
+
+  _resetFailedCombos() {
+    this._failedCombos.forEach((combo) => combo.reset());
+    this._failedCombos.clear();
+  }
+}
+
 export default class GameKeyboard {
+  static VALID_EVENTS = Object.values(KeyboardEvents);
+
   _orchestrators = {
     on: this._attachEvent.bind(this),
     off: null,
-    createCombo: null,
+    createCombo: this._createCombo.bind(this),
     createKeyBinding: null,
     onRelease: null,
     isPressed: null,
@@ -318,13 +533,29 @@ export default class GameKeyboard {
 
   _keys = new KeyboardKeys();
   _activeKeys = new Set();
-  _keyHandlers = new Map();
+  _eventsMap = new Map();
 
-  constructor(eventHandlers) {
+  constructor(eventHandlers, frameCallbacks) {
     this._eventHandlers = eventHandlers;
+    this._frameCallbacks = frameCallbacks;
+    this._keyComboWatcher = new KeyComboWatcher(this._frameCallbacks);
 
     this._eventHandlers.on("keydown", this._handlerKeyEvent);
     this._eventHandlers.on("keyup", this._handlerKeyEvent);
+
+    this._keyComboWatcher.oncombomatched = (combo, reason) => {
+      this._dispatchEvent(KeyboardEvents.COMBOMATCHED, {
+        combo,
+        reason,
+      });
+    };
+
+    this._keyComboWatcher.oncombofailed = (combo, reason) => {
+      this._dispatchEvent(KeyboardEvents.COMBOFAILED, {
+        combo,
+        reason,
+      });
+    };
   }
 
   getOrchestrators() {
@@ -336,26 +567,28 @@ export default class GameKeyboard {
     const activeKey = this._keys.getKeyByCode(code);
     const currentEvent = this._keys.getCurrentEvent();
 
-    if (!activeKey) return;
-
-    activeKey.dispatch(eventType, {
+    const event = {
       key,
       code,
       ...modifiers,
-      event: currentEvent,
-    });
+      currentEvent,
+    };
+
+    if (activeKey) {
+      activeKey.dispatch(eventType, event);
+    }
 
     this._addActiveKey(code, eventType);
-    this._triggerKeyHandlers(eventType, code);
-  }
 
-  _triggerKeyHandlers(eventType, code) {
-    const keyHandlers = this._keyHandlers.get(eventType.description);
+    if (this._eventsMap.has(eventType)) {
+      this._dispatchEvent(eventType, event);
+    }
 
-    if (!keyHandlers) return;
-
-    if (keyHandlers.has(code)) {
-      keyHandlers.get(code).forEach((handler) => handler());
+    if (
+      !this._keyComboWatcher.isEmpty() &&
+      eventType === KeyboardEvents.PRESSED
+    ) {
+      this._keyComboWatcher.trackKey(key);
     }
   }
 
@@ -383,23 +616,44 @@ export default class GameKeyboard {
     return this._keys;
   }
 
-  _attachEvent(keyInput, type, handler) {
+  _attachEvent(eventType, handler) {
+    eventType = KeyboardEvents[eventType.toUpperCase()];
+
+    if (!GameKeyboard.VALID_EVENTS.includes(eventType)) {
+      throw new Error(`Invalid event type: ${eventType.description}`);
+    }
+
     if (typeof handler !== "function") {
       throw new Error("Handler must be a function");
     }
 
-    if (!this._keyHandlers.has(type)) {
-      this._keyHandlers.set(type, new Map());
+    if (!this._eventsMap.has(eventType)) {
+      this._eventsMap.set(eventType, new Set());
     }
 
-    const keyHandlers = this._keyHandlers.get(type);
-
-    if (!keyHandlers.has(keyInput)) {
-      keyHandlers.set(keyInput, new Set());
-    }
-
-    keyHandlers.get(keyInput).add(handler);
+    this._eventsMap.get(eventType).add(handler);
   }
 
-  _createCombo(keyCombo, handler) {}
+  _dispatchEvent(eventType, event) {
+    if (!GameKeyboard.VALID_EVENTS.includes(eventType)) {
+      throw new Error(`Invalid event type: ${eventType.description}`);
+    }
+
+    const handlers = this._eventsMap.get(eventType);
+
+    if (!handlers) return;
+
+    handlers.forEach((handler) => handler(event));
+  }
+
+  _createCombo(keyCombo, config) {
+    const combo = new KeyCombo({
+      keys: keyCombo,
+      ...config,
+    });
+
+    this._keyComboWatcher.watch(combo);
+
+    return combo;
+  }
 }

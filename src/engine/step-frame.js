@@ -1,6 +1,8 @@
 export default class StepFrame {
   rAF = null;
 
+  _frameCallbacks = new Set();
+
   /**
    * @param {Object} canvasContext - Objeto que contiene el método render().
    * @param {Object} options - Opciones de configuración.
@@ -17,11 +19,6 @@ export default class StepFrame {
   }
 
   step = (time) => {
-    if (!this.isRunning) {
-      cancelAnimationFrame(this.rAF);
-      return;
-    }
-
     const currentFrame = performance.now();
     const delta = currentFrame - this.lastFrame;
 
@@ -35,6 +32,8 @@ export default class StepFrame {
       this.canvasContext.render(time, delta);
     }
 
+    this._frameCallbacks.forEach((cb) => cb(time));
+
     this.rAF = requestAnimationFrame(this.step);
   };
 
@@ -47,5 +46,10 @@ export default class StepFrame {
 
   stop() {
     this.isRunning = false;
+    cancelAnimationFrame(this.rAF);
+  }
+
+  getFrameCallbacks() {
+    return this._frameCallbacks;
   }
 }
