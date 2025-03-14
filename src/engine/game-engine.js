@@ -52,11 +52,9 @@ export default class GameEngine {
       scenesManager: this._scenes,
     });
 
+    this._input = new GameInput(this._canvasContext);
+
     this._stepFrame = new StepFrame(this._canvasContext, { frameRate });
-    this._input = new GameInput(
-      this._canvasContext,
-      this._stepFrame.getFrameCallbacks()
-    );
     this._context = new GameContext(this);
   }
 

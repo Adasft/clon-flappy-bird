@@ -1,7 +1,7 @@
 export default class StepFrame {
   rAF = null;
 
-  _frameCallbacks = new Set();
+  static _frameTimeoutCallbacks = new Map();
 
   /**
    * @param {Object} canvasContext - Objeto que contiene el método render().
@@ -32,7 +32,7 @@ export default class StepFrame {
       this.canvasContext.render(time, delta);
     }
 
-    this._frameCallbacks.forEach((cb) => cb(time));
+    this._executeExpiredFrameTimeouts(time);
 
     this.rAF = requestAnimationFrame(this.step);
   };
@@ -49,7 +49,42 @@ export default class StepFrame {
     cancelAnimationFrame(this.rAF);
   }
 
-  getFrameCallbacks() {
-    return this._frameCallbacks;
+  static createTimeout(cb, duration) {
+    return StepFrame._registerFrameTimeout({
+      cb,
+      duration,
+      createdAt: performance.now(),
+    });
+  }
+
+  static cleatTimeout(id) {
+    StepFrame._unregisterFrameTimeout(id);
+  }
+
+  _executeExpiredFrameTimeouts(time) {
+    if (StepFrame._frameTimeoutCallbacks.size === 0) return;
+
+    for (const [
+      id,
+      { cb, duration, createdAt },
+    ] of StepFrame._frameTimeoutCallbacks) {
+      const elapsedTime = time - createdAt;
+
+      if (elapsedTime >= duration) {
+        cb(time);
+        StepFrame.cleatTimeout(id);
+      }
+    }
+  }
+
+  static _registerFrameTimeout(frameTimeout) {
+    const id = this._frameTimeoutCallbacks.size;
+    this._frameTimeoutCallbacks.set(id, frameTimeout);
+    return id;
+  }
+
+  static _unregisterFrameTimeout(frameTimeoutId) {
+    if (!this._frameTimeoutCallbacks.has(frameTimeoutId)) return;
+    this._frameTimeoutCallbacks.delete(frameTimeoutId);
   }
 }

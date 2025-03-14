@@ -69,34 +69,42 @@ class MainScene extends Engine.Scene {
 
     this.keys = keyboard.getKeys();
 
+    keyboard.on("keybindingmatched", (e) => {
+      console.log(e);
+    });
+
+    keyboard.createKeyBinding("a+b", () => {
+      console.log("Hola");
+    });
+
     // keyboard.on("released", (event) => {
     //   console.log(event);
     // });
 
-    keyboard.on("combomatched", (event) => {
-      console.log(event);
-    });
+    // keyboard.on("combomatched", (event) => {
+    //   console.log(event);
+    // });
 
-    keyboard.on("combofailed", (event) => {
-      console.log(event);
-    });
+    // keyboard.on("combofailed", (event) => {
+    //   console.log(event);
+    // });
 
-    this.jumpCombo = keyboard.createCombo("ABCD", {
-      timeLimit: 2000,
-      isOrdered: true,
-      onmatched: () => {
-        console.log("ABCD Matched");
-      },
-    });
+    // this.jumpCombo = keyboard.createKeyCombo("ABCD", {
+    //   timeLimit: 2000,
+    //   isOrdered: true,
+    //   onmatched: () => {
+    //     console.log("ABCD Matched");
+    //   },
+    // });
 
-    keyboard.createCombo("ABCDE", {
-      timeLimit: 20000,
-      isOrdered: false,
-      duration: 5000,
-      onmatched: () => {
-        console.log("ABCDE Matched");
-      },
-    });
+    // keyboard.createKeyCombo("ABCDE", {
+    //   timeLimit: 20000,
+    //   isOrdered: false,
+    //   duration: 5000,
+    //   onmatched: () => {
+    //     console.log("ABCDE Matched");
+    //   },
+    // });
 
     // keyboard.createCombo("QWER", {
     //   timeLimit: 20000,

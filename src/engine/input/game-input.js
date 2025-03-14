@@ -6,13 +6,9 @@ export default class GameInput {
     off: this._removeEvent.bind(this),
   };
 
-  constructor(canvasContext, frameCallbacks) {
+  constructor(canvasContext) {
     this._canvasContext = canvasContext;
-    this._frameCallbacks = frameCallbacks;
-    this._keyboard = new GameKeyboard(
-      this._eventHandlers,
-      this._frameCallbacks
-    );
+    this._keyboard = new GameKeyboard(this._eventHandlers);
   }
 
   get keyboard() {
