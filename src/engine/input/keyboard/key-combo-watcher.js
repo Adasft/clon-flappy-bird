@@ -10,8 +10,8 @@ export class KeyComboWatcher {
   _comboKeysMap = new Map();
   _lastKeyTime = null;
 
-  oncombomatched = noop;
-  oncombofailed = noop;
+  onkeycombomatched = noop;
+  onkeycombofailed = noop;
 
   watch(keyCombo) {
     if (this._combos.has(keyCombo)) return;
@@ -63,8 +63,8 @@ export class KeyComboWatcher {
     }
 
     this._trackedKey = keyMap;
-
     this._lastKeyTime = now;
+
     this._checkCombos();
   }
 
@@ -90,14 +90,14 @@ export class KeyComboWatcher {
 
   _handleComboFailure(combo, reason) {
     combo.fail();
-    this.oncombofailed(combo, reason);
+    this.onkeycombofailed(combo, reason);
     this._resetComboState(combo);
     this._failedCombos.add(combo);
   }
 
   _handleComboMatch(combo, reason) {
     combo.activate();
-    this.oncombomatched(combo, reason);
+    this.onkeycombomatched(combo, reason);
     this._resetComboState(combo);
   }
 

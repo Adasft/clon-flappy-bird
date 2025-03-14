@@ -44,8 +44,8 @@ export const BodyShape = Object.freeze({
 export const KeyboardEvents = Object.freeze({
   PRESSED: Symbol("pressed"),
   RELEASED: Symbol("released"),
-  COMBOMATCHED: Symbol("combomatched"),
-  COMBOFAILED: Symbol("combofailed"),
+  KEYCOMBOMATCHED: Symbol("combomatched"),
+  KEYCOMBOFAILED: Symbol("combofailed"),
   KEYBINDINGMATCHED: Symbol("keybindingmatched"),
 });
 

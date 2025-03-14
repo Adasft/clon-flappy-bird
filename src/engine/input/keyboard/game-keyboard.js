@@ -75,15 +75,15 @@ export default class GameKeyboard {
     this._eventHandlers.on("keydown", this._handlerKeyEvent);
     this._eventHandlers.on("keyup", this._handlerKeyEvent);
 
-    this._keyComboWatcher.oncombomatched = (combo, reason) => {
-      this._dispatchEvent(KeyboardEvents.COMBOMATCHED, {
+    this._keyComboWatcher.onkeycombomatched = (combo, reason) => {
+      this._dispatchEvent(KeyboardEvents.KEYCOMBOMATCHED, {
         combo,
         reason,
       });
     };
 
-    this._keyComboWatcher.oncombofailed = (combo, reason) => {
-      this._dispatchEvent(KeyboardEvents.COMBOFAILED, {
+    this._keyComboWatcher.onkeycombofailed = (combo, reason) => {
+      this._dispatchEvent(KeyboardEvents.KEYCOMBOFAILED, {
         combo,
         reason,
       });
