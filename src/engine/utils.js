@@ -1,3 +1,5 @@
+import { Platform } from "./enums.js";
+
 export function loadImage(src) {
   return new Promise((resolve, reject) => {
     const image = new Image();
@@ -31,7 +33,7 @@ export function when(currentCase, caseHandlers) {
 
   if (typeof caseHandler !== "function") {
     throw new Error(
-      `Invalid case: "${currentCase}". Expected a function but got ${typeof caseHandler}.`
+      `Invalid case: "${currentCase}". Expected a function but got ${typeof caseHandler}.`,
     );
   }
 
@@ -54,6 +56,23 @@ export function createVector(x = 0, y = 0) {
   });
 
   return vector;
+}
+
+export function getPlatformOS() {
+  const isWinRegExp = /Win/i;
+  const isMacRegExp = /Mac/i;
+  const isLinuxRegExp = /Linux/i;
+  const platform = navigator.userAgentData?.platform ?? navigator.platform;
+
+  if (isWinRegExp.test(platform)) {
+    return Platform.WINDOWS;
+  } else if (isMacRegExp.test(platform)) {
+    return Platform.MAC;
+  } else if (isLinuxRegExp.test(platform)) {
+    return Platform.LINUX;
+  } else {
+    return Platform.UNKNOWN;
+  }
 }
 
 const el = document.getElementById("text");

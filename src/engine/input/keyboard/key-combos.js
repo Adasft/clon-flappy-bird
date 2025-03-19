@@ -1,7 +1,35 @@
 import { KeyComboTestReason } from "../../enums.js";
 import { noop } from "../../utils.js";
 
-export class KeyComboWatcher {
+/**
+ * @interface KeyWatcher
+ * @description Interfaz para vigilar y rastrear objetos relacionados con teclas, como KeyBinding y KeyCombo.
+ *
+ * Inicia la observación de un objeto relacionado con teclas.
+ * @function
+ * @name KeyWatcher#watch
+ * @param {KeyObservable} keyObject - Objeto a observar (ej. KeyBinding, KeyCombo).
+ *
+ * Detiene la observación de un objeto relacionado con teclas.
+ * @function
+ * @name KeyWatcher#unwatch
+ * @param {KeyObservable} keyObject - Objeto que dejará de ser observado.
+ *
+ * Rastrea una tecla específica para detectar su estado.
+ * @function
+ * @name KeyWatcher#trackKey
+ * @param {string} key - La tecla a rastrear (ej. "Control", "Shift", "a").
+ * @param {boolean} [isRepeating=false] - Indica si la tecla está repetida.
+ *
+ * Verifica si una tecla específica está activa o presionada.
+ * @function
+ * @name KeyWatcher#isWatching
+ * @param {string} key - La tecla a verificar.
+ * @returns {boolean} `true` si la tecla está activa, `false` en caso contrario.
+ *
+ * @implements {KeyWatcher}
+ */
+export class KeyCombos {
   _combos = new Set();
   _inCombo = false;
   _trackedKey = null;
@@ -25,7 +53,7 @@ export class KeyComboWatcher {
   }
 
   unwatch(keyCombo) {
-    if (!this._comboKeysMap.has(keyCombo)) return;
+    if (!this._combos.has(keyCombo)) return;
 
     keyCombo.keys.forEach((key) => {
       const count = this._comboKeysMap.get(key) - 1;
@@ -40,7 +68,7 @@ export class KeyComboWatcher {
     this._combos.delete(keyCombo);
   }
 
-  hasCombos() {
+  isWatching() {
     return !!this._combos.size;
   }
 

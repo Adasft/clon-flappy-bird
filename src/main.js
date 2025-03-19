@@ -73,9 +73,55 @@ class MainScene extends Engine.Scene {
       console.log(e);
     });
 
-    keyboard.createKeyBinding("a+b", () => {
-      console.log("Hola");
+    // const parent = keyboard.createKeyBinding({
+    //   binding: "Meta+b",
+    //   platforms: {
+    //     win: "Ctrl+b",
+    //     // mac: "Meta+b",
+    //     // linux: "Meta+b"
+    //   },
+    //   mode: "pressedOnce",
+    //   isOrdered: true,
+    //   enabled: true,
+    //   repeatRate: 0,
+    //   onmatched: () => {},
+    //   onreleased: () => {},
+    // });
+
+    keyboard.createKeyBinding("Meta+a", {
+      // En el campo `requiere` se especifica la clave que se necesita para que se ejecute la acción
+      // se le pasa el objeto keyBinding al cual se requiere, para ser ejecutado, pero puede ser opcional
+      requiere: {
+        binding: parent,
+        isStrict: true, // Si es true no se va a ejecutar, si es false se va a ejecutar
+      },
+      // En el campo `platforms` se especifica como sera la combinacion de teclas en diferentes plataformas
+      platforms: {
+        win: "Ctrl+a",
+        mac: "Meta+a",
+        linux: "Meta+a",
+      },
+      mode: "pressedOnce",
+      duration: 0,
+      enabled: true,
+      repeatRate: 0,
+      onmatched: () => {},
     });
+
+    // keyboard.createKeyBinding({
+    //   binding: "Meta+d",
+    //   bindingMap: {
+    //     win: "Ctrl+d",
+    //     // mac: "Meta+d",
+    //     // linux: "Meta+d"
+    //   },
+    //   mode: "pressedOnce",
+    //   isOrdered: true,
+    //   enabled: true,
+    //   repeatRate: 0,
+    //   onmatched: () => {},
+    //   onreleased: () => {},
+    // });
 
     // keyboard.on("released", (event) => {
     //   console.log(event);
@@ -194,7 +240,7 @@ game.scene.add(
       this.base = this.add.image("base", 100, 100);
     },
   },
-  Engine.SceneBehavior.PARALLEL
+  Engine.SceneBehavior.PARALLEL,
 );
 
 console.log(render);
@@ -210,8 +256,9 @@ document.body.addEventListener("click", () => {
 //   // console.log("up", e);
 // });
 
-document.addEventListener("keydown", (e) => {
+document.addEventListener("keyup", (e) => {
   e.preventDefault();
+  // console.log(e);
   if (e.key === "a") {
     game.play();
   } else if (e.key === "s") {

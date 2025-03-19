@@ -1,5 +1,6 @@
 export default class StepFrame {
-  rAF = null;
+  #rAF = null;
+  limitFps;
 
   static _frameTimeoutCallbacks = new Map();
 
@@ -18,7 +19,7 @@ export default class StepFrame {
     this.isRunning = false;
   }
 
-  step = (time) => {
+  updateFrame = (time) => {
     const currentFrame = performance.now();
     const delta = currentFrame - this.lastFrame;
 
@@ -34,19 +35,19 @@ export default class StepFrame {
 
     this._executeExpiredFrameTimeouts(time);
 
-    this.rAF = requestAnimationFrame(this.step);
+    this.#rAF = requestAnimationFrame(this.updateFrame);
   };
 
   start() {
     if (this.isRunning) return;
     this.isRunning = true;
     this.lastFrame = performance.now();
-    this.step();
+    this.updateFrame();
   }
 
   stop() {
     this.isRunning = false;
-    cancelAnimationFrame(this.rAF);
+    cancelAnimationFrame(this.#rAF);
   }
 
   static createTimeout(cb, duration) {
@@ -57,7 +58,7 @@ export default class StepFrame {
     });
   }
 
-  static cleatTimeout(id) {
+  static clearTimeout(id) {
     StepFrame._unregisterFrameTimeout(id);
   }
 
@@ -72,7 +73,7 @@ export default class StepFrame {
 
       if (elapsedTime >= duration) {
         cb(time);
-        StepFrame.cleatTimeout(id);
+        StepFrame.clearTimeout(id);
       }
     }
   }

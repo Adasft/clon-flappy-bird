@@ -200,6 +200,14 @@ export class KeyboardKeys {
     return this._currentEvent;
   }
 
+  keyIsMeta(key) {
+    return (
+      key === "Meta" ||
+      key === this.MetaRight.code ||
+      key === this.MetaLeft.code
+    );
+  }
+
   getKeyByCode(code) {
     if (!this.hasOwnProperty(code)) {
       console.warn(`Key with code ${code} is not defined`);

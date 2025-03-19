@@ -15,40 +15,270 @@
 // Keyboard. enable()
 // Reactiva la detección de teclado.
 
-import { KeyboardEvents } from "../../enums.js";
+import {
+  enumHas,
+  KeyBindingMode,
+  KeyboardEvents,
+  Platform,
+} from "../../enums.js";
 import { KeyboardKeys } from "./keyboard-keys.js";
-import { KeyComboWatcher } from "./key-combo-watcher.js";
+import { KeyCombos } from "./key-combos.js";
 import { KeyCombo } from "./key-combo.js";
-import { noop } from "../../utils.js";
+import { getPlatformOS, noop, when } from "../../utils.js";
+import StepFrame from "../../step-frame.js";
 
+const isValidKeyBindingRegExp =
+  /^([\p{L}\p{N}\p{P}\p{S}]|\b(Control|Ctrl|Shift|Alt|Meta|AltGraph)\b)(\+([\p{L}\p{N}\p{P}\p{S}]))+$/u;
+
+class Buffer extends Array {
+  constructor(length = 0) {
+    super(length);
+  }
+
+  get size() {
+    return this.length;
+  }
+
+  add(item) {
+    if (this.includes(item)) return;
+    this.push(item);
+  }
+
+  clear() {
+    this.length = 0;
+  }
+
+  delete(deletedItem) {
+    const index = this.indexOf(deletedItem);
+    if (index >= 0) {
+      this.splice(index, 1);
+    }
+  }
+
+  deleteRange(start, end = this.length) {
+    return this.splice(start, end - start);
+  }
+}
+
+/**
+ * @interface KeyObservable
+ * @description Interfaz para objetos que pueden ser observados por KeyWatcher, como KeyBinding o KeyCombo.
+ *
+ * Activa el objeto, indicando que la combinación de teclas fue detectada.
+ * @function
+ * @name KeyObservable#activate
+ * @abstract
+ *
+ * Desactiva el objeto, indicando que la combinación de teclas ya no está activa.
+ * @function
+ * @name KeyObservable#deactivate
+ * @abstract
+ *
+ * Habilita el objeto, permitiendo que pueda ser observado y ejecutado.
+ * @function
+ * @name KeyObservable#enable
+ * @abstract
+ *
+ * Deshabilita el objeto, evitando que sea observado o activado.
+ * @function
+ * @name KeyObservable#disable
+ * @abstract
+ *
+ * Obtiene las teclas asociadas al objeto.
+ * @function
+ * @name KeyObservable#getKeys
+ * @abstract
+ * @returns {string[]} Un array con las teclas asociadas (ej. `["Control", "A"]`).
+ *
+ * @implements {KeyObservable}
+ */
+class KeyBinding {
+  _isEnabled = true;
+  _isActive = false;
+  _wasActiveBeforeDisable = false;
+
+  constructor({
+    binding = "",
+    requiere,
+    platforms,
+    mode = KeyBindingMode.PRESSED_ONCE,
+    duration = 0,
+    enabled = true,
+    repeatRate = 0,
+    onmatched = noop,
+  }) {
+    if (!isValidKeyBindingRegExp.test(binding))
+      throw new Error(`Invalid key binding: ${binding}`);
+    this.platforms = this._normalizePlatformBindings(platforms, binding);
+    this._currentPlatform = getPlatformOS();
+    this.require = requiere;
+    this._binding = this._getBindingBasesOnPlatform(
+      binding,
+      this._currentPlatform,
+    );
+    this.mode = mode;
+    this.duration = duration;
+    this.repeatRate = repeatRate;
+    this.onmatched = onmatched;
+    this._isEnabled = enabled;
+  }
+
+  get isEnabled() {
+    return this._isEnabled;
+  }
+
+  get isActive() {
+    return this._isActive;
+  }
+
+  get binding() {
+    return this._binding;
+  }
+
+  enable() {
+    this._isEnabled = false;
+    this._isActive = this._wasActiveBeforeDisable;
+  }
+
+  disable() {
+    this._isEnabled = false;
+    this._wasActiveBeforeDisable = this._isActive;
+    this._isActive = false;
+  }
+
+  activate() {
+    if (!this._isEnabled) return;
+
+    const isRequireStrict = this.require?.isStrict ?? false;
+    const isRequireActive = this.require?.binding.isActive ?? false;
+    const canActivate = !this.require || !isRequireStrict || isRequireActive;
+
+    if (canActivate) return;
+
+    this._isActive = true;
+    this.onmatched(isRequireActive);
+
+    if (this.duration === Infinity) return;
+
+    if (this.duration === 0) {
+      this.deactivate();
+    } else {
+      StepFrame.createTimeout(() => {
+        this.deactivate();
+        this._wasActiveBeforeDisable = false;
+      }, this.duration);
+    }
+  }
+
+  deactivate() {
+    if (!this._isEnabled) return;
+
+    this._isActive = false;
+  }
+
+  getKeys() {}
+
+  _normalizePlatformBindings(platforms, defaultBinding) {
+    if (!platforms) return null;
+
+    platforms.win ??= defaultBinding;
+    platforms.mac ??= defaultBinding;
+    platforms.linux ??= defaultBinding;
+
+    return platforms;
+  }
+
+  _getBindingBasesOnPlatform(defaultBinding, platform) {
+    return this.platforms
+      ? when(platform, {
+          [Platform.WINDOWS]: () => this.platforms.win,
+          [Platform.MAC]: () => this.platforms.mac,
+          [Platform.LINUX]: () => this.platforms.linux,
+          [Platform.UNKNOWN]: () => defaultBinding,
+        })
+      : defaultBinding;
+  }
+}
+
+/**
+ * @interface KeyWatcher
+ * @description Interfaz para vigilar y rastrear objetos relacionados con teclas, como KeyBinding y KeyCombo.
+ *
+ * Inicia la observación de un objeto relacionado con teclas.
+ * @function
+ * @name KeyWatcher#watch
+ * @param {KeyObservable} keyObject - Objeto a observar (ej. KeyBinding, KeyCombo).
+ *
+ * Detiene la observación de un objeto relacionado con teclas.
+ * @function
+ * @name KeyWatcher#unwatch
+ * @param {KeyObservable} keyObject - Objeto que dejará de ser observado.
+ *
+ * Rastrea una tecla específica para detectar su estado.
+ * @function
+ * @name KeyWatcher#trackKey
+ * @param {string} key - La tecla a rastrear (ej. "Control", "Shift", "a").
+ * @param {boolean} [isRepeating=false] - Indica si la tecla está repetida.
+ *
+ * Verifica si una tecla específica está activa o presionada.
+ * @function
+ * @name KeyWatcher#isWatching
+ * @param {string} key - La tecla a verificar.
+ * @returns {boolean} `true` si la tecla está activa, `false` en caso contrario.
+ *
+ * @implements {KeyWatcher}
+ */
 class KeyBindings {
-  _keyBindingsMap = new Map();
+  _keymaps = new Map();
+  _keysBuffer = new Buffer();
+  _isLastKeyRepeating = false;
 
   onkeybindingmatched = noop;
 
-  register(keyBinding, callback) {
-    this._keyBindingsMap.set(keyBinding, callback);
+  get keysBuffer() {
+    return this._keysBuffer;
   }
 
-  match(keyBinding) {
-    if (!this._keyBindingsMap.has(keyBinding)) return;
+  watch(keyBinding) {
+    const binding = keyBinding.binding;
 
-    const cb = this._keyBindingsMap.get(keyBinding);
-    const keyCodes = keyBinding.split("+").map((ch) => ch.charCodeAt());
+    if (this._keymaps.has(binding)) return;
 
-    cb();
-
-    this.onkeybindingmatched(keyBinding, keyCodes);
+    this._keymaps.set(binding, keyBinding);
   }
 
-  hasBindings() {
-    return !!this._keyBindingsMap.size;
+  unwatch(keyBinding) {
+    const binding = keyBinding.binding;
+    this._keymaps.delete(binding);
+  }
+
+  trackKey(key, isRepeating = false) {
+    this._isLastKeyRepeating = isRepeating;
+    if (this._isLastKeyRepeating) return;
+    this._keysBuffer.push(key);
+    this._checkKeyBinding();
+  }
+
+  isWatching() {
+    return !!this._keymaps.size;
+  }
+
+  _checkKeyBinding() {
+    const binding = this._formatKeyBindings();
+    const keyBinding = this._keymaps.get(binding);
+
+    if (!keyBinding) return;
+
+    keyBinding.activate();
+    this.onkeybindingmatched();
+  }
+
+  _formatKeyBindings() {
+    return this._keysBuffer.join("+");
   }
 }
 
 export default class GameKeyboard {
-  static VALID_EVENTS = Object.values(KeyboardEvents);
-
   _orchestrators = {
     on: this._attachEvent.bind(this),
     off: null,
@@ -64,10 +294,11 @@ export default class GameKeyboard {
   };
 
   _keys = new KeyboardKeys();
-  _keyComboWatcher = new KeyComboWatcher();
+  _keyCombos = new KeyCombos();
   _keyBindings = new KeyBindings();
-  _activeKeys = new Set();
+  _activeKeysBuffer = new Buffer();
   _eventsMap = new Map();
+  _lastActiveKey = null;
 
   constructor(eventHandlers) {
     this._eventHandlers = eventHandlers;
@@ -75,22 +306,22 @@ export default class GameKeyboard {
     this._eventHandlers.on("keydown", this._handlerKeyEvent);
     this._eventHandlers.on("keyup", this._handlerKeyEvent);
 
-    this._keyComboWatcher.onkeycombomatched = (combo, reason) => {
-      this._dispatchEvent(KeyboardEvents.KEYCOMBOMATCHED, {
+    this._keyCombos.onkeycombomatched = (combo, reason) => {
+      this._dispatchEvent(KeyboardEvents.KEY_COMBO_MATCHED, {
         combo,
         reason,
       });
     };
 
-    this._keyComboWatcher.onkeycombofailed = (combo, reason) => {
-      this._dispatchEvent(KeyboardEvents.KEYCOMBOFAILED, {
+    this._keyCombos.onkeycombofailed = (combo, reason) => {
+      this._dispatchEvent(KeyboardEvents.KEY_COMBO_FAILED, {
         combo,
         reason,
       });
     };
 
     this._keyBindings.onkeybindingmatched = (keyBinding, keyCodes) => {
-      this._dispatchEvent(KeyboardEvents.KEYBINDINGMATCHED, {
+      this._dispatchEvent(KeyboardEvents.KEY_BINDING_MATCHED, {
         keyBinding,
         keyCodes,
       });
@@ -117,34 +348,68 @@ export default class GameKeyboard {
       activeKey.dispatch(eventType, event);
     }
 
-    this._addActiveKey(key, eventType);
+    if (eventType === KeyboardEvents.PRESSED) {
+      this._handlePressedKeyEvent(event);
+    } else {
+      this._handleReleasedKeyEvent(event);
+    }
 
     if (this._eventsMap.has(eventType)) {
       this._dispatchEvent(eventType, event);
     }
+  }
 
-    if (eventType === KeyboardEvents.PRESSED) {
-      if (this._keyComboWatcher.hasCombos()) {
-        this._keyComboWatcher.trackKey(key);
-      }
+  _handlePressedKeyEvent({ key, code, isMeta, isRepeating }) {
+    if (code !== this._lastActiveKey) {
+      this._activeKeysBuffer.add(code);
+    }
 
-      if (this._keyBindings.hasBindings()) {
-        this._keyBindings.match(this._formatKeyBindings());
-      }
+    if (this._keys.keyIsMeta(code)) {
+      const index = this._activeKeysBuffer.indexOf(code);
+      this._activeKeysBuffer.deleteRange(0, index + 1);
+      this._activeKeysBuffer.add(code);
+    } else if (isMeta && !this._lastActiveKey) {
+      this._lastActiveKey = code;
+      this._activeKeysBuffer.pop();
+    }
+
+    if (this._keyCombos.isWatching()) {
+      this._keyCombos.trackKey(key);
+    }
+
+    if (this._keyBindings.isWatching()) {
+      this._keyBindings.trackKey(key, isRepeating);
     }
   }
 
-  _formatKeyBindings() {
-    return [...this._activeKeys].join("+");
-  }
-
-  _addActiveKey(code, eventType) {
-    if (eventType === KeyboardEvents.PRESSED) {
-      this._activeKeys.add(code);
+  _handleReleasedKeyEvent({ key, code }) {
+    if (this._keys.keyIsMeta(code)) {
+      this._activeKeysBuffer.clear();
+      this._lastActiveKey = null;
     } else {
-      this._activeKeys.delete(code);
+      this._activeKeysBuffer.delete(code);
+    }
+
+    if (this._keyBindings.isWatching()) {
+      if (this._activeKeysBuffer.size === 0) {
+        this._keyBindings.keysBuffer.clear();
+      } else {
+        this._keyBindings.keysBuffer.delete(key);
+      }
     }
   }
+
+  // _formatKeyBindings() {
+  //   return [...this._activeKeys].join("+");
+  // }
+
+  // _addActiveKey(code, eventType) {
+  //   if (eventType === KeyboardEvents.PRESSED) {
+  //     this._activeKeys.add(code);
+  //   } else {
+  //     this._activeKeys.delete(code);
+  //   }
+  // }
 
   _handlerKeyEvent = (event) => {
     event.preventDefault();
@@ -163,10 +428,8 @@ export default class GameKeyboard {
   }
 
   _attachEvent(eventType, handler) {
-    eventType = KeyboardEvents[eventType.toUpperCase()];
-
-    if (!GameKeyboard.VALID_EVENTS.includes(eventType)) {
-      throw new Error(`Invalid event type: ${eventType.description}`);
+    if (!enumHas(KeyboardEvents, eventType)) {
+      throw new Error(`Invalid event type: ${eventType}`);
     }
 
     if (typeof handler !== "function") {
@@ -181,8 +444,8 @@ export default class GameKeyboard {
   }
 
   _dispatchEvent(eventType, event) {
-    if (!GameKeyboard.VALID_EVENTS.includes(eventType)) {
-      throw new Error(`Invalid event type: ${eventType.description}`);
+    if (!enumHas(KeyboardEvents, eventType)) {
+      throw new Error(`Invalid event type: ${eventType}`);
     }
 
     const handlers = this._eventsMap.get(eventType);
@@ -198,12 +461,19 @@ export default class GameKeyboard {
       ...config,
     });
 
-    this._keyComboWatcher.watch(combo);
+    this._keyCombos.watch(combo);
 
     return combo;
   }
 
-  _createKeyBinding(keyBindings, callback) {
-    this._keyBindings.register(keyBindings, callback);
+  _createKeyBinding(binding, config) {
+    const keyBinding = new KeyBinding({
+      binding,
+      ...config,
+    });
+
+    this._keyBindings.watch(keyBinding);
+
+    return keyBinding;
   }
 }

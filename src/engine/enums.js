@@ -42,17 +42,33 @@ export const BodyShape = Object.freeze({
 });
 
 export const KeyboardEvents = Object.freeze({
-  PRESSED: Symbol("pressed"),
-  RELEASED: Symbol("released"),
-  KEYCOMBOMATCHED: Symbol("combomatched"),
-  KEYCOMBOFAILED: Symbol("combofailed"),
-  KEYBINDINGMATCHED: Symbol("keybindingmatched"),
+  PRESSED: "pressed",
+  RELEASED: "released",
+  KEY_COMBO_MATCHED: "keycombomatched",
+  KEY_COMBO_FAILED: "keycombofailed",
+  KEY_BINDING_MATCHED: "keybindingmatched",
 });
 
 export const KeyComboTestReason = Object.freeze({
-  TIME_LIMIT_EXCEEDED: Symbol("time_limit_exceeded"),
-  INVALID_KEY: Symbol("invalid_key"),
-  ORDER_MISMATCH: Symbol("order_mismatch"),
+  TIME_LIMIT_EXCEEDED: Symbol("timelimitexceeded"),
+  INVALID_KEY: Symbol("invalidkey"),
+  ORDER_MISMATCH: Symbol("ordermismatch"),
   MATCHED: Symbol("matched"),
   PENDING: Symbol("pending"),
 });
+
+export const KeyBindingMode = Object.freeze({
+  PRESSED_ONCE: "pressedOnce",
+  HOLD: "hold",
+});
+
+export const Platform = Object.freeze({
+  WINDOWS: Symbol("Windows"),
+  MAC: Symbol("Mac"),
+  LINUX: Symbol("Linux"),
+  UNKNOWN: Symbol("Unknown"),
+});
+
+export function enumHas(objectEnum, propertyDescription) {
+  return Object.values(objectEnum).includes(propertyDescription);
+}

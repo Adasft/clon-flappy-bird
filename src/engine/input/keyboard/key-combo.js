@@ -1,23 +1,58 @@
 import { KeyComboTestReason } from "../../enums.js";
 import StepFrame from "../../step-frame.js";
 
+/**
+ * @interface KeyObservable
+ * @description Interfaz para objetos que pueden ser observados por KeyWatcher, como KeyBinding o KeyCombo.
+ *
+ * Activa el objeto, indicando que la combinación de teclas fue detectada.
+ * @function
+ * @name KeyObservable#activate
+ * @abstract
+ *
+ * Desactiva el objeto, indicando que la combinación de teclas ya no está activa.
+ * @function
+ * @name KeyObservable#deactivate
+ * @abstract
+ *
+ * Habilita el objeto, permitiendo que pueda ser observado y ejecutado.
+ * @function
+ * @name KeyObservable#enable
+ * @abstract
+ *
+ * Deshabilita el objeto, evitando que sea observado o activado.
+ * @function
+ * @name KeyObservable#disable
+ * @abstract
+ *
+ * Obtiene las teclas asociadas al objeto.
+ * @function
+ * @name KeyObservable#getKeys
+ * @abstract
+ * @returns {string[]} Un array con las teclas asociadas (ej. `["Control", "A"]`).
+ *
+ * @implements {KeyObservable}
+ */
 export class KeyCombo {
   _isEnabled = true;
   _isActive = false;
   _isFailed = false;
   _keysBuffer = [];
+  _wasActiveBeforeDisable = false;
 
   constructor({
     keys = "",
     timeLimit = Infinity,
     duration = Infinity,
     isOrdered = true,
+    enabled = true,
     onmatched = () => {},
   }) {
     this.keys = keys.split("").map((key) => key.toUpperCase());
     this.timeLimit = timeLimit;
     this.duration = duration;
     this.isOrdered = isOrdered;
+    this._isEnabled = enabled;
     this.onmatched = onmatched;
   }
 
@@ -35,17 +70,24 @@ export class KeyCombo {
 
   enable() {
     this._isEnabled = true;
+    this._isActive = this._wasActiveBeforeDisable;
   }
 
   disable() {
     this._isEnabled = false;
+    this._wasActiveBeforeDisable = this._isActive;
+    this._isActive = false;
   }
 
   fail() {
+    if (!this._isEnabled) return;
+
     this._isFailed = true;
   }
 
   test(keyMap) {
+    if (!this._isEnabled) return;
+
     const { key, time } = keyMap;
     const isValidTimeLimit = this.timeLimit > time;
     const isValidKey = this.keys.includes(key);
@@ -73,23 +115,29 @@ export class KeyCombo {
   }
 
   reset() {
+    if (!this._isEnabled) return;
+
     this._lastKeyTime = null;
     this._keysBuffer = [];
     this._isFailed = false;
   }
 
   activate() {
+    if (!this._isEnabled) return;
+
     this._isActive = true;
     this._keysBuffer = [];
 
     if (this.duration === Infinity) return;
 
     StepFrame.createTimeout(() => {
-      this.desactivate();
+      this.deactivate();
+      this._wasActiveBeforeDisable = false;
     }, this.duration);
   }
 
-  desactivate() {
+  deactivate() {
+    if (!this._isEnabled) return;
     this._isActive = false;
   }
 
